@@ -7,7 +7,7 @@
 
 html, body, #map {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background-color: #121212;
 }
@@ -177,14 +177,14 @@ html, body, #map {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background-color: #121212;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  transform: translateY(calc(100vh - 50px));
+  transform: translateY(calc(100dvh - 50px));
   transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
   touch-action: none;
@@ -192,7 +192,7 @@ html, body, #map {
 
 /* Cabecera roja fija */
 #sheet-header {
-  height: 58px; /* Aumentamos ligeramente la altura para acomodar el asa */
+  height: 58px;
   min-height: 58px;
   background-color: #b7092b;
   display: flex;
@@ -222,7 +222,6 @@ html, body, #map {
   align-items: center;
   justify-content: space-between;
 }
-
 
 .sheet-title {
   color: #ffffff;
@@ -432,12 +431,11 @@ input:checked + .slider:before {
   vertical-align: middle;
 }
 
-/* Espaciado opcional para alinear el icono junto al checkbox o texto */
 .checkbox-container img,
 .checkbox-container svg {
   margin-right: 4px;
-
 }
+
 /* Corrección específica para los iconos de la cabecera del panel */
 #sheet-header img,
 #sheet-header svg,
@@ -451,4 +449,3 @@ input:checked + .slider:before {
   max-height: 20px !important;
   object-fit: contain;
 }
-
