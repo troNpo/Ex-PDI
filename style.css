@@ -417,3 +417,24 @@ input:checked + .slider:before {
 .category-item.active .arrow-icon-btn {
   transform: rotate(90deg);
 }
+
+/* Corrección de tamaño y visualización para los iconos de categorías */
+.category-row img,
+.subcategory-list img,
+.category-row svg,
+.subcategory-list svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Espaciado opcional para alinear el icono junto al checkbox o texto */
+.checkbox-container img,
+.checkbox-container svg {
+  margin-right: 4px;
+}
+
