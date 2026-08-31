@@ -436,5 +436,19 @@ input:checked + .slider:before {
 .checkbox-container img,
 .checkbox-container svg {
   margin-right: 4px;
+
+}
+/* Corrección específica para los iconos de la cabecera del panel */
+#sheet-header img,
+#sheet-header svg,
+.sheet-actions img,
+.sheet-actions svg,
+.sheet-btn img,
+.sheet-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  object-fit: contain;
 }
 
