@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- Configuracion basica del documento -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Visor MapLibre Android</title>
+
+  <!-- Libreria MapLibre GL JS -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Estilos locales -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Selector de mapas base -->
+  <div id="map-selector-container">
+    <select id="map-select">
+      <option value="osm">OpenStreetMap</option>
+      <option value="topo">OpenTopoMap</option>
+      <option value="esri">Satélite (Esri)</option>
+    </select>
+  </div>
+  
+<!-- Panel deslizante inferior (Bottom Sheet) -->
+<div id="bottom-sheet" class="sheet-collapsed">
+  <!-- Cabecera fija roja -->
+<div id="sheet-header">
+  <div class="drag-handle"></div>
+  <div class="header-top-row">
+    <span class="sheet-title">Búsqueda de PDI</span>
+    <div class="sheet-actions">
+      <button class="sheet-btn" id="btn-help" aria-label="Ayuda">
+        <img src="icons/help.svg" alt="Ayuda">
+      </button>
+      <button class="sheet-btn" id="btn-cancel" aria-label="Limpiar">
+        <img src="icons/cancel.svg" alt="Limpiar">
+      </button>
+      <button class="sheet-btn" id="btn-check" aria-label="Aplicar">
+        <img src="icons/check.svg" alt="Aplicar">
+      </button>
+      <button class="sheet-btn" id="btn-more" aria-label="Ajustes">
+        <img src="icons/more.svg" alt="Ajustes">
+      </button>
+    </div>
+  </div>
+</div>
+
+  <!-- Contenido con scroll -->
+  <div id="sheet-content">
+    <div class="category-subheader">
+      <span class="subheader-title">Categorías</span>
+      <div class="toggle-container">
+        <span class="toggle-label">Expandir nodos</span>
+        <label class="switch">
+          <input type="checkbox" id="expand-nodes-toggle">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Árbol de Categorías PDI -->
+<ul class="poi-categories"></ul>
+
+
+    </ul>
+  </div>
+</div>
+
+  <!-- Buscador desplegable -->
+<div id="search-container">
+  <div id="search-box" class="hidden">
+    <input type="text" id="search-input" placeholder="Buscar lugar..." autocomplete="off">
+    <ul id="search-results"></ul>
+  </div>
+  <!-- Boton con referencia a archivo externo SVG -->
+  <button id="search-toggle" aria-label="Buscar">
+    <img src="icons/search.svg" alt="Buscar" width="18" height="18">
+  </button>
+</div>
+
+
+  <!-- Contenedor del mapa -->
+  <div id="map"></div>
+
+  <!-- Script principal -->
+  <script src="script.js"></script>
+</body>
+</html>
