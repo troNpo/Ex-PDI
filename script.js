@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
     transform: translate(-50%, -50%);
     width: 40px;
     height: 40px;
-    background-image: url('icons/cen_map.svg');
+    background-image: url('icons/cen-map.svg');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
