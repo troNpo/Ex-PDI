@@ -17,6 +17,9 @@ const baseMaps = {
   }
 };
 
+// Variable para el radio de búsqueda en kilómetros (por defecto 5 km)
+let searchRadiusKm = 5.0;
+
 // Inicialización del mapa con Terreno 3D y 85° de Inclinación Libre
 const map = new maplibregl.Map({
   container: 'map',
@@ -96,6 +99,98 @@ const scale = new maplibregl.ScaleControl({
   unit: 'metric'
 });
 map.addControl(scale, 'top-left');
+
+// Configuración de capas para el cuadrado de búsqueda visual
+map.on('load', () => {
+  map.addSource('search-area-source', {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[]]
+      }
+    }
+  });
+
+  map.addLayer({
+    id: 'search-area-fill',
+    type: 'fill',
+    source: 'search-area-source',
+    paint: {
+      'fill-color': '#b7092b',
+      'fill-opacity': 0.1
+    }
+  });
+
+  map.addLayer({
+    id: 'search-area-border',
+    type: 'line',
+    source: 'search-area-source',
+    paint: {
+      'line-color': '#b7092b',
+      'line-width': 2,
+      'line-dasharray': [3, 3]
+    }
+  });
+
+  // Dibujar el área inicial al cargar
+  updateSearchAreaPolygon();
+});
+
+// Actualizar el polígono visual según el centro del mapa y los km del slider
+function updateSearchAreaPolygon() {
+  const source = map.getSource('search-area-source');
+  if (!source) return;
+
+  const center = map.getCenter();
+  const latDelta = searchRadiusKm / 111.0;
+  const lngDelta = searchRadiusKm / (111.0 * Math.cos(center.lat * (Math.PI / 180)));
+
+  const west = center.lng - lngDelta;
+  const east = center.lng + lngDelta;
+  const north = center.lat + latDelta;
+  const south = center.lat - latDelta;
+
+  const polygonGeoJSON = {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [[
+        [west, north],
+        [east, north],
+        [east, south],
+        [west, south],
+        [west, north]
+      ]]
+    }
+  };
+
+  source.setData(polygonGeoJSON);
+}
+
+// Actualizar el polígono al mover el mapa
+map.on('move', () => {
+  updateSearchAreaPolygon();
+});
+
+// Ajustar el centro visible de MapLibre en función de si el panel está abierto o cerrado
+function updateMapPadding() {
+  const isSheetOpen = !headerMain.classList.contains('hidden');
+  
+  if (isSheetOpen) {
+    const topOffset = window.innerHeight * 0.25;
+    map.easeTo({
+      padding: { top: topOffset, bottom: 0, left: 0, right: 0 },
+      duration: 300
+    });
+  } else {
+    map.easeTo({
+      padding: { top: 0, bottom: 0, left: 0, right: 0 },
+      duration: 300
+    });
+  }
+}
 
 // Sistema de Toast Visual para iPhone
 function showToast(message, duration = 3000) {
@@ -249,6 +344,8 @@ window.addEventListener('touchend', () => {
   } else {
     sheet.style.transform = `translateY(${SNAP_CLOSED}px)`;
   }
+
+  setTimeout(updateMapPadding, 300);
 });
 
 window.addEventListener('resize', initSheetPosition);
@@ -364,12 +461,22 @@ function initCategoryEvents() {
   });
 }
 
-// Configuración de pestañas del panel
+// Configuración de pestañas del panel (Slider de Radio de Búsqueda)
 const settingsConfig = [
   {
     "tab": "settings",
     "title": "Configuración de Búsqueda de POIs",
-    "description": "Próximamente parámetros avanzados de filtrado de puntos."
+    "sections": [
+      {
+        "title": "Radio de Búsqueda alrededor del Centro",
+        "type": "range",
+        "name": "search-radius",
+        "min": 0.5,
+        "max": 20,
+        "step": 0.5
+      }
+    ],
+    "description": "Parámetros avanzados de filtrado de puntos."
   },
   {
     "tab": "maps-layers",
@@ -419,6 +526,8 @@ btnMore.addEventListener('click', (e) => {
   const { SNAP_FULL } = getSnapPoints();
   sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
   sheet.style.transform = `translateY(${SNAP_FULL}px)`;
+
+  updateMapPadding();
 });
 
 document.querySelectorAll('.sheet-btn').forEach(btn => {
@@ -436,6 +545,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       headerMain.classList.remove('hidden');
       sheetContent.innerHTML = categoriesHTML;
       initCategoryEvents();
+      updateMapPadding();
       return;
     }
 
@@ -450,12 +560,33 @@ function renderTabContent(tabName) {
   if (!tabData) return;
 
   if (tabName === 'settings') {
-    sheetContent.innerHTML = `
-      <div class="settings-group">
-        <div class="settings-section-title">${tabData.title}</div>
-        <p style="font-size: 12px; color: #aaa; padding: 6px 0;">${tabData.description}</p>
-      </div>
-    `;
+    let html = '';
+    tabData.sections.forEach(sec => {
+      html += `
+        <div class="settings-group">
+          <div class="settings-section-title">${sec.title}</div>
+          <div class="poi-categories" style="padding: 10px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 13px; color: #cccccc;">Distancia seleccionada:</span>
+              <span id="radius-value-label" style="font-size: 15px; font-weight: 700; color: #b7092b;">${searchRadiusKm} km</span>
+            </div>
+            <input type="range" id="search-radius-range" min="${sec.min}" max="${sec.max}" step="${sec.step}" value="${searchRadiusKm}" style="width: 100%; accent-color: #b7092b; cursor: pointer;">
+          </div>
+        </div>`;
+    });
+    sheetContent.innerHTML = html;
+
+    const rangeInput = document.getElementById('search-radius-range');
+    const radiusLabel = document.getElementById('radius-value-label');
+
+    if (rangeInput) {
+      rangeInput.addEventListener('input', (ev) => {
+        searchRadiusKm = parseFloat(ev.target.value);
+        radiusLabel.textContent = `${searchRadiusKm} km`;
+        updateSearchAreaPolygon(); // Actualiza el cuadrado visual al deslizar
+      });
+    }
+
   } else if (tabName === 'maps-layers') {
     let html = '';
     tabData.sections.forEach(sec => {
@@ -483,10 +614,8 @@ function renderTabContent(tabName) {
     });
     sheetContent.innerHTML = html;
 
-    // Sincronizar estado actual de los radios de mapas base al renderizar
     const currentBaseSource = map.getSource('base-tiles');
     if (currentBaseSource) {
-      // Intentar averiguar qué radio marcar comparando la URL tile
       const activeTileUrl = currentBaseSource.tiles[0];
       for (const [key, val] of Object.entries(baseMaps)) {
         if (val.tiles[0] === activeTileUrl) {
@@ -497,7 +626,6 @@ function renderTabContent(tabName) {
       }
     }
 
-    // Eventos para cambiar mapa base (Respetando el orden por debajo de las capas activas)
     document.querySelectorAll('input[name="base-map"]').forEach(radio => {
       radio.addEventListener('change', (ev) => {
         const selectedKey = ev.target.value;
@@ -514,7 +642,6 @@ function renderTabContent(tabName) {
           attribution: newSource.attribution
         });
 
-        // Detectar si hay capas superpuestas activas para insertar el base debajo
         const firstOverlay = ['layer-hiking', 'layer-bicycle', 'layer-mtb'].find(id => map.getLayer(id));
 
         map.addLayer({
@@ -527,7 +654,6 @@ function renderTabContent(tabName) {
       });
     });
 
-    // Eventos para activar/desactivar capas de Waymarked Trails con sincronización visual
     const toggleLayerBinding = (id, sourceName) => {
       const chk = document.getElementById(id);
       if (chk) {
@@ -627,16 +753,26 @@ if (btnCheck) {
       return;
     }
 
-    showToast(`Buscando ${searchQueries.length} filtros...`);
+    showToast(`Buscando en radio de ${searchRadiusKm} km...`);
 
-    const bounds = map.getBounds();
-    const viewbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
+    // Actualizar polígono visual antes de buscar
+    updateSearchAreaPolygon();
+
+    // Calcular viewbox en base al centro del mapa y el radio seleccionado en el slider
+    const center = map.getCenter();
+    const latDelta = searchRadiusKm / 111.0;
+    const lngDelta = searchRadiusKm / (111.0 * Math.cos(center.lat * (Math.PI / 180)));
+
+    const west = center.lng - lngDelta;
+    const east = center.lng + lngDelta;
+    const north = center.lat + latDelta;
+    const south = center.lat - latDelta;
+
+    const viewbox = `${west},${north},${east},${south}`;
 
     fetchPOIsFromNominatim(searchQueries, viewbox);
   });
 }
-
-
 
 if (btnCancel) {
   btnCancel.addEventListener('click', () => {
@@ -651,7 +787,6 @@ if (btnCancel) {
 function fetchPOIsFromNominatim(searchQueries, viewbox) {
   clearPoiMarkers();
 
-  // Límite dinámico: máximo 15 para 1 checkbox, reduciéndose de forma inteligente si hay múltiples selecciones
   const totalQueries = searchQueries.length;
   const dynamicLimit = Math.max(3, Math.floor(15 / Math.sqrt(totalQueries)));
 
@@ -682,7 +817,6 @@ function fetchPOIsFromNominatim(searchQueries, viewbox) {
       showToast('Error al consultar la red');
     });
 }
-
 
 function renderPoiMarkers(places) {
   if (places.length === 0) {
