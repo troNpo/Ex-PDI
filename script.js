@@ -604,6 +604,7 @@ function getNodeColor(categoryIndex, nodeIndex) {
   const palette = categoryPalettes[categoryIndex % categoryPalettes.length];
   return palette.shades[nodeIndex % palette.shades.length];
 }
+
 if (btnCheck) {
   btnCheck.addEventListener('click', () => {
     const categoryItems = document.querySelectorAll('.category-item');
@@ -613,12 +614,10 @@ if (btnCheck) {
       const childCheckboxes = catItem.querySelectorAll('.subcategory-list input[type="checkbox"]:checked');
       
       childCheckboxes.forEach((chk, nodeIndex) => {
-        const key = chk.getAttribute('data-key');
         const val = chk.getAttribute('data-val');
         
-        if (key && val) {
-          const term = `${key} ${val}`;
-          searchQueries.push({ term, catIndex, nodeIndex });
+        if (val) {
+          searchQueries.push({ term: val, catIndex, nodeIndex });
         }
       });
     });
@@ -652,8 +651,12 @@ if (btnCancel) {
 function fetchPOIsFromNominatim(searchQueries, viewbox) {
   clearPoiMarkers();
 
+  // Límite dinámico: máximo 15 para 1 checkbox, reduciéndose de forma inteligente si hay múltiples selecciones
+  const totalQueries = searchQueries.length;
+  const dynamicLimit = Math.max(3, Math.floor(15 / Math.sqrt(totalQueries)));
+
   const promises = searchQueries.map((item) => {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(item.term)}&viewbox=${viewbox}&bounded=1&limit=5`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(item.term)}&viewbox=${viewbox}&bounded=1&limit=${dynamicLimit}`;
     
     return fetch(url, {
       headers: { 'User-Agent': 'EX-PDI-App/1.0' }
@@ -679,6 +682,7 @@ function fetchPOIsFromNominatim(searchQueries, viewbox) {
       showToast('Error al consultar la red');
     });
 }
+
 
 function renderPoiMarkers(places) {
   if (places.length === 0) {
