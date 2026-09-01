@@ -62,7 +62,40 @@ const scale = new maplibregl.ScaleControl({
 });
 map.addControl(scale, 'top-left');
 
-// Lógica del buscador de lugares
+// Sistema de Toast Visual para iPhone
+function showToast(message, duration = 3000) {
+  let toast = document.getElementById('app-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      text-align: center;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  
+  clearTimeout(toast.hideTimeout);
+  toast.hideTimeout = setTimeout(() => {
+    toast.style.opacity = '0';
+  }, duration);
+}
+
+// Lógica del buscador de lugares superior
 const searchToggle = document.getElementById('search-toggle');
 const searchBox = document.getElementById('search-box');
 const searchInput = document.getElementById('search-input');
@@ -233,16 +266,14 @@ async function loadCategories() {
     });
 
     initCategoryEvents();
-    
-    // Guardar el HTML completo una vez renderizadas las categorías reales
     categoriesHTML = sheetContent.innerHTML;
 
   } catch (error) {
     console.error('Error al cargar las categorías:', error);
+    showToast('Error al cargar categories.json');
   }
 }
 
-// Inicialización de eventos para checkboxes y switch
 function initCategoryEvents() {
   document.querySelectorAll('.category-item').forEach(item => {
     const parentCheckbox = item.querySelector('.category-row input[type="checkbox"]');
@@ -282,23 +313,9 @@ function initCategoryEvents() {
       });
     }
   });
-
-  const expandToggle = document.getElementById('expand-nodes-toggle');
-  if (expandToggle) {
-    expandToggle.addEventListener('change', (e) => {
-      const isExpanded = e.target.checked;
-      document.querySelectorAll('.category-item').forEach(item => {
-        if (isExpanded) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
-      });
-    });
-  }
 }
 
-// Configuración incrustada localmente para evitar bloqueos CORS en file://
+// Configuración de pestañas del panel
 const settingsConfig = [
   {
     "tab": "settings",
@@ -376,7 +393,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
     renderTabContent(tabName);
   });
 });
@@ -419,7 +435,6 @@ function renderTabContent(tabName) {
     });
     sheetContent.innerHTML = html;
 
-    // Eventos para el cambio de mapa base unificado
     document.querySelectorAll('input[name="base-map"]').forEach(radio => {
       radio.addEventListener('change', (ev) => {
         const selectedKey = ev.target.value;
@@ -453,6 +468,116 @@ function renderTabContent(tabName) {
     html += `</div>`;
     sheetContent.innerHTML = html;
   }
+}
+
+// ----------------------------------------------------
+// LÓGICA DE BÚSQUEDA POR CHECKBOXES Y BOTÓN CHECK / CANCEL
+// ----------------------------------------------------
+let poiMarkers = [];
+
+const btnCheck = document.getElementById('btn-check'); 
+const btnCancel = document.getElementById('btn-cancel'); 
+
+if (btnCheck) {
+  btnCheck.addEventListener('click', () => {
+    // Buscamos los checkboxes marcados
+    const checkedBoxes = document.querySelectorAll('.subcategory-list input[type="checkbox"]:checked, .category-row input[type="checkbox"]:checked');
+    
+    if (checkedBoxes.length === 0) {
+      showToast('Selecciona al menos una categoría');
+      return;
+    }
+
+    showToast(`Buscando ${checkedBoxes.length} filtros...`);
+
+    const searchTerms = [];
+    checkedBoxes.forEach(chk => {
+      const labelSpan = chk.closest('label')?.querySelector('span');
+      const term = labelSpan ? labelSpan.textContent.trim() : chk.getAttribute('data-val');
+      if (term) {
+        searchTerms.push(term);
+      }
+    });
+
+    const bounds = map.getBounds();
+    const viewbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
+
+    fetchPOIsFromNominatim(searchTerms, viewbox);
+  });
+} else {
+  console.warn("No se encontró el elemento #btn-check en el DOM");
+}
+
+if (btnCancel) {
+  btnCancel.addEventListener('click', () => {
+    document.querySelectorAll('.poi-categories input[type="checkbox"]').forEach(chk => {
+      chk.checked = false;
+      chk.indeterminate = false;
+    });
+    showToast('Filtros reiniciados');
+  });
+}
+
+function fetchPOIsFromNominatim(terms, viewbox) {
+  clearPoiMarkers();
+
+  const promises = terms.map(term => {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=5`;
+    
+    return fetch(url, {
+      headers: { 'User-Agent': 'EX-PDI-App/1.0' }
+    })
+    .then(res => res.json())
+    .catch(err => {
+      console.error("Error en fetch individual:", err);
+      return [];
+    });
+  });
+
+  Promise.all(promises)
+    .then(results => {
+      const flatResults = results.flat();
+      const uniquePlaces = Array.from(new Map(flatResults.map(item => [item.place_id, item])).values());
+      
+      showToast(`Encontrados: ${uniquePlaces.length} PDI`);
+      renderPoiMarkers(uniquePlaces);
+    })
+    .catch(err => {
+      console.error('Error general en Nominatim:', err);
+      showToast('Error al consultar la red');
+    });
+}
+
+function renderPoiMarkers(places) {
+  if (places.length === 0) {
+    showToast('No hay resultados en esta vista');
+    return;
+  }
+
+  places.forEach(place => {
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
+
+    const el = document.createElement('div');
+    el.className = 'custom-poi-marker';
+    el.style.width = '28px';
+    el.style.height = '28px';
+    el.style.backgroundImage = `url('icons/default-poi.svg')`;
+    el.style.backgroundSize = 'contain';
+    el.style.backgroundRepeat = 'no-repeat';
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([lon, lat])
+      .setPopup(new maplibregl.Popup().setText(place.display_name))
+      .addTo(map);
+
+    poiMarkers.push(marker);
+  });
+}
+
+function clearPoiMarkers() {
+  poiMarkers.forEach(marker => marker.remove());
+  poiMarkers = [];
 }
 
 // Cargar al iniciar
