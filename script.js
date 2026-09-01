@@ -483,7 +483,21 @@ function renderTabContent(tabName) {
     });
     sheetContent.innerHTML = html;
 
-    // Eventos para cambiar mapa base (Corregido eliminando el parámetro erróneo)
+    // Sincronizar estado actual de los radios de mapas base al renderizar
+    const currentBaseSource = map.getSource('base-tiles');
+    if (currentBaseSource) {
+      // Intentar averiguar qué radio marcar comparando la URL tile
+      const activeTileUrl = currentBaseSource.tiles[0];
+      for (const [key, val] of Object.entries(baseMaps)) {
+        if (val.tiles[0] === activeTileUrl) {
+          const radioToCheck = sheetContent.querySelector(`input[name="base-map"][value="${key}"]`);
+          if (radioToCheck) radioToCheck.checked = true;
+          break;
+        }
+      }
+    }
+
+    // Eventos para cambiar mapa base (Respetando el orden por debajo de las capas activas)
     document.querySelectorAll('input[name="base-map"]').forEach(radio => {
       radio.addEventListener('change', (ev) => {
         const selectedKey = ev.target.value;
@@ -500,20 +514,25 @@ function renderTabContent(tabName) {
           attribution: newSource.attribution
         });
 
+        // Detectar si hay capas superpuestas activas para insertar el base debajo
+        const firstOverlay = ['layer-hiking', 'layer-bicycle', 'layer-mtb'].find(id => map.getLayer(id));
+
         map.addLayer({
           id: 'base-layer',
           type: 'raster',
           source: 'base-tiles',
           minzoom: 0,
           maxzoom: newSource.maxzoom
-        });
+        }, firstOverlay);
       });
     });
 
-    // Eventos para activar/desactivar capas de Waymarked Trails
+    // Eventos para activar/desactivar capas de Waymarked Trails con sincronización visual
     const toggleLayerBinding = (id, sourceName) => {
       const chk = document.getElementById(id);
       if (chk) {
+        chk.checked = map.getLayer(id) !== undefined;
+
         chk.addEventListener('change', (ev) => {
           if (ev.target.checked) {
             if (!map.getLayer(id)) {
