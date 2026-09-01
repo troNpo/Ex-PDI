@@ -477,3 +477,41 @@ input:checked + .slider:before {
 .settings-group {
   margin-bottom: 20px;
 }
+
+// Función para activar la limpieza de marcadores desde las herramientas o cualquier evento
+function setupClearMarkersAction() {
+  // Buscamos el elemento de utilidades de limpiar marcadores en el panel lateral
+  const toolRows = document.querySelectorAll('.category-row, div[style*="cursor: pointer"]');
+  
+  toolRows.forEach(row => {
+    if (row.textContent.includes('Limpiar marcadores de búsqueda')) {
+      row.addEventListener('click', () => {
+        clearPoiMarkers();
+        showToast('Marcadores eliminados de la pantalla');
+      });
+    }
+  });
+}
+
+// Ejecutar la vinculación cada vez que se renderice la pestaña de herramientas
+// Modificamos ligeramente la sección 'tools' dentro de renderTabContent:
+
+  } else if (tabName === 'tools') {
+    let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
+    tabData.items.forEach(item => {
+      // Añadimos un identificador o clase para reconocerlo fácilmente
+      const actionClass = item.action === 'clear-markers' ? 'action-clear-markers' : '';
+      html += `<div class="category-row ${actionClass}" style="cursor: pointer; padding: 12px 0;"><span>${item.label}</span></div>`;
+    });
+    html += `</div>`;
+    sheetContent.innerHTML = html;
+
+    // Vincular el clic de limpiar marcadores recién renderizado
+    const btnClearAction = sheetContent.querySelector('.action-clear-markers');
+    if (btnClearAction) {
+      btnClearAction.addEventListener('click', () => {
+        clearPoiMarkers();
+        showToast('Marcadores eliminados de la pantalla');
+      });
+    }
+  }

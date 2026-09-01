@@ -17,7 +17,7 @@ const baseMaps = {
   }
 };
 
-// Inicialización del mapa
+// Inicialización del mapa con libertad total de inclinación 3D
 const map = new maplibregl.Map({
   container: 'map',
   style: {
@@ -28,6 +28,14 @@ const map = new maplibregl.Map({
         tiles: baseMaps['osm'].tiles,
         tileSize: 256,
         attribution: baseMaps['osm'].attribution
+      },
+      'terrarium-dem': {
+        tiles: [
+          'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'
+        ],
+        type: 'raster-dem',
+        tileSize: 512,
+        encoding: 'terrarium'
       }
     },
     layers: [
@@ -38,11 +46,19 @@ const map = new maplibregl.Map({
         minzoom: 0,
         maxzoom: 19
       }
-    ]
+    ],
+    terrain: {
+      source: 'terrarium-dem',
+      exaggeration: 1.2 // Opcional: puedes subirlo a 1.5 si quieres realzar más las montañas
+    }
   },
   center: [-3.70379, 40.41678],
-  zoom: 12
+  zoom: 12,
+  pitch: 65,      // Inclinación inicial más pronunciada
+  maxPitch: 85    // Elimina la restricción y permite inclinar casi hasta el horizonte
 });
+
+
 
 // Controles nativos
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -275,6 +291,21 @@ async function loadCategories() {
 }
 
 function initCategoryEvents() {
+  // Lógica para el interruptor global de expandir/contraer nodos
+  const expandToggle = document.getElementById('expand-nodes-toggle');
+  if (expandToggle) {
+    expandToggle.addEventListener('change', () => {
+      const isChecked = expandToggle.checked;
+      document.querySelectorAll('.category-item').forEach(item => {
+        if (isChecked) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    });
+  }
+
   document.querySelectorAll('.category-item').forEach(item => {
     const parentCheckbox = item.querySelector('.category-row input[type="checkbox"]');
     const childCheckboxes = item.querySelectorAll('.subcategory-list input[type="checkbox"]');
@@ -463,49 +494,82 @@ function renderTabContent(tabName) {
   } else if (tabName === 'tools') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     tabData.items.forEach(item => {
-      html += `<div class="category-row" style="cursor: pointer; padding: 12px 0;"><span>${item.label}</span></div>`;
+      const actionClass = item.action === 'clear-markers' ? 'action-clear-markers' : '';
+      let iconHtml = '';
+      if (item.action === 'clear-markers') {
+        iconHtml = `<img src="icons/trash.svg" alt="Limpiar" width="22" height="22" style="opacity: 0.8;">`;
+      }
+      html += `
+        <div class="category-row ${actionClass}" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+          <span>${item.label}</span>
+          ${iconHtml}
+        </div>`;
     });
     html += `</div>`;
     sheetContent.innerHTML = html;
+
+    // Vincular el evento de clic al botón de limpiar marcadores
+    const btnClearAction = sheetContent.querySelector('.action-clear-markers');
+    if (btnClearAction) {
+      btnClearAction.addEventListener('click', () => {
+        clearPoiMarkers();
+        showToast('Marcadores eliminados de la pantalla');
+      });
+    }
   }
 }
 
 // ----------------------------------------------------
-// LÓGICA DE BÚSQUEDA POR CHECKBOXES Y BOTÓN CHECK / CANCEL
+// LÓGICA DE BÚSQUEDA Y COLORES OSM CARTO
 // ----------------------------------------------------
 let poiMarkers = [];
 
 const btnCheck = document.getElementById('btn-check'); 
 const btnCancel = document.getElementById('btn-cancel'); 
 
+// Paleta de colores base inspirada en OSM Carto por categoría
+const categoryPalettes = [
+  { base: '#27ae60', shades: ['#27ae60', '#2ecc71', '#1abc9c', '#16a085'] }, // Verde
+  { base: '#2980b9', shades: ['#2980b9', '#3498db', '#00cec9', '#0984e3'] }, // Azul
+  { base: '#d35400', shades: ['#d35400', '#e67e22', '#f39c12', '#e58e26'] }, // Naranja
+  { base: '#8e44ad', shades: ['#8e44ad', '#9b59b6', '#6c5ce7', '#a29bfe'] }, // Morado
+  { base: '#c0392b', shades: ['#c0392b', '#e74c3c', '#ff7675', '#d63031'] }  // Rojo
+];
+
+function getNodeColor(categoryIndex, nodeIndex) {
+  const palette = categoryPalettes[categoryIndex % categoryPalettes.length];
+  return palette.shades[nodeIndex % palette.shades.length];
+}
+
 if (btnCheck) {
   btnCheck.addEventListener('click', () => {
-    // Buscamos los checkboxes marcados
-    const checkedBoxes = document.querySelectorAll('.subcategory-list input[type="checkbox"]:checked, .category-row input[type="checkbox"]:checked');
-    
-    if (checkedBoxes.length === 0) {
-      showToast('Selecciona al menos una categoría');
+    const categoryItems = document.querySelectorAll('.category-item');
+    const searchQueries = [];
+
+    categoryItems.forEach((catItem, catIndex) => {
+      const childCheckboxes = catItem.querySelectorAll('.subcategory-list input[type="checkbox"]:checked');
+      
+      childCheckboxes.forEach((chk, nodeIndex) => {
+        const labelSpan = chk.closest('label')?.querySelector('span');
+        const term = labelSpan ? labelSpan.textContent.trim() : chk.getAttribute('data-val');
+        if (term) {
+          searchQueries.push({ term, catIndex, nodeIndex });
+        }
+      });
+    });
+
+    if (searchQueries.length === 0) {
+      showToast('Selecciona al menos una subcategoría');
       return;
     }
 
-    showToast(`Buscando ${checkedBoxes.length} filtros...`);
-
-    const searchTerms = [];
-    checkedBoxes.forEach(chk => {
-      const labelSpan = chk.closest('label')?.querySelector('span');
-      const term = labelSpan ? labelSpan.textContent.trim() : chk.getAttribute('data-val');
-      if (term) {
-        searchTerms.push(term);
-      }
-    });
+    showToast(`Buscando ${searchQueries.length} filtros...`);
 
     const bounds = map.getBounds();
     const viewbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
 
-    fetchPOIsFromNominatim(searchTerms, viewbox);
+    fetchPOIsFromNominatim(searchQueries, viewbox);
   });
-} else {
-  console.warn("No se encontró el elemento #btn-check en el DOM");
 }
 
 if (btnCancel) {
@@ -518,16 +582,17 @@ if (btnCancel) {
   });
 }
 
-function fetchPOIsFromNominatim(terms, viewbox) {
+function fetchPOIsFromNominatim(searchQueries, viewbox) {
   clearPoiMarkers();
 
-  const promises = terms.map(term => {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=5`;
+  const promises = searchQueries.map((item) => {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(item.term)}&viewbox=${viewbox}&bounded=1&limit=5`;
     
     return fetch(url, {
       headers: { 'User-Agent': 'EX-PDI-App/1.0' }
     })
     .then(res => res.json())
+    .then(data => data.map(place => ({ ...place, color: getNodeColor(item.catIndex, item.nodeIndex) })))
     .catch(err => {
       console.error("Error en fetch individual:", err);
       return [];
@@ -537,7 +602,7 @@ function fetchPOIsFromNominatim(terms, viewbox) {
   Promise.all(promises)
     .then(results => {
       const flatResults = results.flat();
-      const uniquePlaces = Array.from(new Map(flatResults.map(item => [item.place_id, item])).values());
+      const uniquePlaces = Array.from(new Map(flatResults.map(p => [p.place_id, p])).values());
       
       showToast(`Encontrados: ${uniquePlaces.length} PDI`);
       renderPoiMarkers(uniquePlaces);
@@ -557,16 +622,9 @@ function renderPoiMarkers(places) {
   places.forEach(place => {
     const lat = parseFloat(place.lat);
     const lon = parseFloat(place.lon);
+    const markerColor = place.color || '#e74c3c';
 
-    const el = document.createElement('div');
-    el.className = 'custom-poi-marker';
-    el.style.width = '28px';
-    el.style.height = '28px';
-    el.style.backgroundImage = `url('icons/default-poi.svg')`;
-    el.style.backgroundSize = 'contain';
-    el.style.backgroundRepeat = 'no-repeat';
-
-    const marker = new maplibregl.Marker({ element: el })
+    const marker = new maplibregl.Marker({ color: markerColor })
       .setLngLat([lon, lat])
       .setPopup(new maplibregl.Popup().setText(place.display_name))
       .addTo(map);
