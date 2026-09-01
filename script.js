@@ -641,7 +641,7 @@ function renderTabContent(tabName) {
       }
     }
 
-    document.querySelectorAll('input[name="base-map"]').forEach(radio => {
+        document.querySelectorAll('input[name="base-map"]').forEach(radio => {
       radio.addEventListener('change', (ev) => {
         const selectedKey = ev.target.value;
         const newSource = baseMaps[selectedKey];
@@ -666,8 +666,36 @@ function renderTabContent(tabName) {
           minzoom: 0,
           maxzoom: newSource.maxzoom
         }, firstOverlay);
+
+        // Volver a pintar el cuadro rojo encima de la nueva capa base
+        if (map.getLayer('search-area-fill')) map.removeLayer('search-area-fill');
+        if (map.getLayer('search-area-border')) map.removeLayer('search-area-border');
+
+        map.addLayer({
+          id: 'search-area-fill',
+          type: 'fill',
+          source: 'search-area-source',
+          paint: {
+            'fill-color': '#b7092b',
+            'fill-opacity': 0.1
+          }
+        });
+
+        map.addLayer({
+          id: 'search-area-border',
+          type: 'line',
+          source: 'search-area-source',
+          paint: {
+            'line-color': '#b7092b',
+            'line-width': 2,
+            'line-dasharray': [3, 3]
+          }
+        });
+
+        updateSearchAreaPolygon();
       });
     });
+
 
     const toggleLayerBinding = (id, sourceName) => {
       const chk = document.getElementById(id);
@@ -867,5 +895,5 @@ function clearPoiMarkers() {
 document.addEventListener('DOMContentLoaded', () => {
   loadCategories();
 
-
+ 
 });
