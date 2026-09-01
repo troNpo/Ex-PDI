@@ -604,7 +604,6 @@ function getNodeColor(categoryIndex, nodeIndex) {
   const palette = categoryPalettes[categoryIndex % categoryPalettes.length];
   return palette.shades[nodeIndex % palette.shades.length];
 }
-
 if (btnCheck) {
   btnCheck.addEventListener('click', () => {
     const categoryItems = document.querySelectorAll('.category-item');
@@ -614,9 +613,11 @@ if (btnCheck) {
       const childCheckboxes = catItem.querySelectorAll('.subcategory-list input[type="checkbox"]:checked');
       
       childCheckboxes.forEach((chk, nodeIndex) => {
-        const labelSpan = chk.closest('label')?.querySelector('span');
-        const term = labelSpan ? labelSpan.textContent.trim() : chk.getAttribute('data-val');
-        if (term) {
+        const key = chk.getAttribute('data-key');
+        const val = chk.getAttribute('data-val');
+        
+        if (key && val) {
+          const term = `${key} ${val}`;
           searchQueries.push({ term, catIndex, nodeIndex });
         }
       });
@@ -635,6 +636,8 @@ if (btnCheck) {
     fetchPOIsFromNominatim(searchQueries, viewbox);
   });
 }
+
+
 
 if (btnCancel) {
   btnCancel.addEventListener('click', () => {
