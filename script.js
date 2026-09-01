@@ -17,7 +17,7 @@ const baseMaps = {
   }
 };
 
-// Inicialización del mapa con libertad total de inclinación 3D
+// Inicialización del mapa con Terreno 3D y 85° de Inclinación Libre
 const map = new maplibregl.Map({
   container: 'map',
   style: {
@@ -36,6 +36,27 @@ const map = new maplibregl.Map({
         type: 'raster-dem',
         tileSize: 512,
         encoding: 'terrarium'
+      },
+      'waymarked-hiking': {
+        type: 'raster',
+        tiles: ['https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 18,
+        attribution: '&copy; <a href="https://waymarkedtrails.org">Waymarked Trails</a>'
+      },
+      'waymarked-cycling': {
+        type: 'raster',
+        tiles: ['https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 18,
+        attribution: '&copy; <a href="https://waymarkedtrails.org">Waymarked Trails</a>'
+      },
+      'waymarked-mtb': {
+        type: 'raster',
+        tiles: ['https://tile.waymarkedtrails.org/mtb/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 18,
+        attribution: '&copy; <a href="https://waymarkedtrails.org">Waymarked Trails</a>'
       }
     },
     layers: [
@@ -49,19 +70,17 @@ const map = new maplibregl.Map({
     ],
     terrain: {
       source: 'terrarium-dem',
-      exaggeration: 1.2 // Opcional: puedes subirlo a 1.5 si quieres realzar más las montañas
+      exaggeration: 1.2
     }
   },
   center: [-3.70379, 40.41678],
   zoom: 12,
-  pitch: 65,      // Inclinación inicial más pronunciada
-  maxPitch: 85    // Elimina la restricción y permite inclinar casi hasta el horizonte
+  pitch: 65,      
+  maxPitch: 85    
 });
 
-
-
-// Controles nativos
-map.addControl(new maplibregl.NavigationControl(), 'top-right');
+// Controles nativos con soporte visual de inclinación
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
 map.addControl(
   new maplibregl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true },
@@ -291,7 +310,6 @@ async function loadCategories() {
 }
 
 function initCategoryEvents() {
-  // Lógica para el interruptor global de expandir/contraer nodos
   const expandToggle = document.getElementById('expand-nodes-toggle');
   if (expandToggle) {
     expandToggle.addEventListener('change', () => {
@@ -367,13 +385,12 @@ const settingsConfig = [
         ]
       },
       {
-        "title": "Capas Superpuestas",
+        "title": "Capas Superpuestas (Waymarked Trails)",
         "type": "checkbox",
         "options": [
           { "label": "Senderismo (Hiking)", "id": "layer-hiking" },
           { "label": "Ciclismo (Bicycle)", "id": "layer-bicycle" },
           { "label": "MTB", "id": "layer-mtb" },
-          { "label": "Deportes de Nieve", "id": "layer-snow" },
           { "label": "Subir archivo GPX / KML", "id": "layer-upload" }
         ]
       }
@@ -466,6 +483,7 @@ function renderTabContent(tabName) {
     });
     sheetContent.innerHTML = html;
 
+    // Eventos para cambiar mapa base (Corregido eliminando el parámetro erróneo)
     document.querySelectorAll('input[name="base-map"]').forEach(radio => {
       radio.addEventListener('change', (ev) => {
         const selectedKey = ev.target.value;
@@ -491,6 +509,35 @@ function renderTabContent(tabName) {
         });
       });
     });
+
+    // Eventos para activar/desactivar capas de Waymarked Trails
+    const toggleLayerBinding = (id, sourceName) => {
+      const chk = document.getElementById(id);
+      if (chk) {
+        chk.addEventListener('change', (ev) => {
+          if (ev.target.checked) {
+            if (!map.getLayer(id)) {
+              map.addLayer({
+                id: id,
+                type: 'raster',
+                source: sourceName,
+                minzoom: 0,
+                maxzoom: 18
+              });
+            }
+          } else {
+            if (map.getLayer(id)) {
+              map.removeLayer(id);
+            }
+          }
+        });
+      }
+    };
+
+    toggleLayerBinding('layer-hiking', 'waymarked-hiking');
+    toggleLayerBinding('layer-bicycle', 'waymarked-cycling');
+    toggleLayerBinding('layer-mtb', 'waymarked-mtb');
+
   } else if (tabName === 'tools') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     tabData.items.forEach(item => {
@@ -508,7 +555,6 @@ function renderTabContent(tabName) {
     html += `</div>`;
     sheetContent.innerHTML = html;
 
-    // Vincular el evento de clic al botón de limpiar marcadores
     const btnClearAction = sheetContent.querySelector('.action-clear-markers');
     if (btnClearAction) {
       btnClearAction.addEventListener('click', () => {
@@ -527,13 +573,12 @@ let poiMarkers = [];
 const btnCheck = document.getElementById('btn-check'); 
 const btnCancel = document.getElementById('btn-cancel'); 
 
-// Paleta de colores base inspirada en OSM Carto por categoría
 const categoryPalettes = [
-  { base: '#27ae60', shades: ['#27ae60', '#2ecc71', '#1abc9c', '#16a085'] }, // Verde
-  { base: '#2980b9', shades: ['#2980b9', '#3498db', '#00cec9', '#0984e3'] }, // Azul
-  { base: '#d35400', shades: ['#d35400', '#e67e22', '#f39c12', '#e58e26'] }, // Naranja
-  { base: '#8e44ad', shades: ['#8e44ad', '#9b59b6', '#6c5ce7', '#a29bfe'] }, // Morado
-  { base: '#c0392b', shades: ['#c0392b', '#e74c3c', '#ff7675', '#d63031'] }  // Rojo
+  { base: '#27ae60', shades: ['#27ae60', '#2ecc71', '#1abc9c', '#16a085'] },
+  { base: '#2980b9', shades: ['#2980b9', '#3498db', '#00cec9', '#0984e3'] },
+  { base: '#d35400', shades: ['#d35400', '#e67e22', '#f39c12', '#e58e26'] },
+  { base: '#8e44ad', shades: ['#8e44ad', '#9b59b6', '#6c5ce7', '#a29bfe'] },
+  { base: '#c0392b', shades: ['#c0392b', '#e74c3c', '#ff7675', '#d63031'] }
 ];
 
 function getNodeColor(categoryIndex, nodeIndex) {
