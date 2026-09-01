@@ -8,6 +8,16 @@ const baseMaps = {
   'topo': {
     tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png'],
     maxzoom: 17,
+// Fuentes de mapas base disponibles
+const baseMaps = {
+  'osm': {
+    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+    maxzoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  },
+  'topo': {
+    tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png'],
+    maxzoom: 17,
     attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)'
   },
   'esri': {
@@ -138,12 +148,21 @@ map.on('load', () => {
   updateSearchAreaPolygon();
 });
 
-// Actualizar el polígono visual según el centro del mapa y los km del slider
+// Actualizar el polígono visual sintonizado con el centro visual (teniendo en cuenta el padding)
 function updateSearchAreaPolygon() {
   const source = map.getSource('search-area-source');
   if (!source) return;
 
-  const center = map.getCenter();
+  const padding = map.getPadding();
+  const container = map.getContainer();
+  
+  const visualPoint = [
+    (container.clientWidth + padding.left - padding.right) / 2,
+    (container.clientHeight + padding.top - padding.bottom) / 2
+  ];
+
+  const center = map.unproject(visualPoint);
+
   const latDelta = searchRadiusKm / 111.0;
   const lngDelta = searchRadiusKm / (111.0 * Math.cos(center.lat * (Math.PI / 180)));
 
@@ -182,14 +201,20 @@ function updateMapPadding() {
     const topOffset = window.innerHeight * 0.25;
     map.easeTo({
       padding: { top: topOffset, bottom: 0, left: 0, right: 0 },
-      duration: 300
+      duration: 300,
+      essential: true
     });
   } else {
     map.easeTo({
       padding: { top: 0, bottom: 0, left: 0, right: 0 },
-      duration: 300
+      duration: 300,
+      essential: true
     });
   }
+
+  // Sincronizar el polígono mientras se desplaza y al terminar la animación
+  setTimeout(updateSearchAreaPolygon, 50);
+  setTimeout(updateSearchAreaPolygon, 320);
 }
 
 // Sistema de Toast Visual para iPhone
@@ -461,7 +486,7 @@ function initCategoryEvents() {
   });
 }
 
-// Configuración de pestañas del panel (Slider de Radio de Búsqueda)
+// Configuración de pestañas del panel
 const settingsConfig = [
   {
     "tab": "settings",
@@ -583,7 +608,7 @@ function renderTabContent(tabName) {
       rangeInput.addEventListener('input', (ev) => {
         searchRadiusKm = parseFloat(ev.target.value);
         radiusLabel.textContent = `${searchRadiusKm} km`;
-        updateSearchAreaPolygon(); // Actualiza el cuadrado visual al deslizar
+        updateSearchAreaPolygon(); // Actualiza el cuadrado visual en tiempo real
       });
     }
 
@@ -710,9 +735,7 @@ function renderTabContent(tabName) {
   }
 }
 
-// ----------------------------------------------------
 // LÓGICA DE BÚSQUEDA Y COLORES OSM CARTO
-// ----------------------------------------------------
 let poiMarkers = [];
 
 const btnCheck = document.getElementById('btn-check'); 
@@ -758,8 +781,15 @@ if (btnCheck) {
     // Actualizar polígono visual antes de buscar
     updateSearchAreaPolygon();
 
-    // Calcular viewbox en base al centro del mapa y el radio seleccionado en el slider
-    const center = map.getCenter();
+    // Calcular viewbox en base al centro visual exacto del mapa y el radio del slider
+    const padding = map.getPadding();
+    const container = map.getContainer();
+    const visualPoint = [
+      (container.clientWidth + padding.left - padding.right) / 2,
+      (container.clientHeight + padding.top - padding.bottom) / 2
+    ];
+    const center = map.unproject(visualPoint);
+
     const latDelta = searchRadiusKm / 111.0;
     const lngDelta = searchRadiusKm / (111.0 * Math.cos(center.lat * (Math.PI / 180)));
 
