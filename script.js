@@ -867,22 +867,5 @@ function clearPoiMarkers() {
 document.addEventListener('DOMContentLoaded', () => {
   loadCategories();
 
-  // Añadir el icono central flotante sobre el mapa
-  const centerIcon = document.createElement('div');
-  centerIcon.id = 'map-center-icon';
-  centerIcon.style.cssText = `
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 40px;
-    height: 40px;
-    background-image: url('icons/cen-map.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    z-index: 1000;
-    pointer-events: none;
-  `;
-  document.getElementById('map').appendChild(centerIcon);
+
 });
