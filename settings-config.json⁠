@@ -1,0 +1,41 @@
+[
+  {
+    "tab": "settings",
+    "title": "Configuración de Búsqueda de POIs",
+    "description": "Próximamente parámetros avanzados de filtrado de puntos."
+  },
+  {
+    "tab": "maps-layers",
+    "sections": [
+      {
+        "title": "Mapa Base",
+        "type": "radio",
+        "name": "base-map",
+        "options": [
+          { "label": "OpenStreetMap", "value": "osm", "checked": true },
+          { "label": "OpenTopoMap", "value": "topo", "checked": false },
+          { "label": "Satélite (Esri)", "value": "esri", "checked": false }
+        ]
+      },
+      {
+        "title": "Capas Superpuestas",
+        "type": "checkbox",
+        "options": [
+          { "label": "Senderismo (Hiking)", "id": "layer-hiking" },
+          { "label": "Ciclismo (Bicycle)", "id": "layer-bicycle" },
+          { "label": "MTB", "id": "layer-mtb" },
+          { "label": "Deportes de Nieve", "id": "layer-snow" },
+          { "label": "Subir archivo GPX / KML", "id": "layer-upload" }
+        ]
+      }
+    ]
+  },
+  {
+    "tab": "tools",
+    "title": "Utilidades y Datos",
+    "items": [
+      { "label": "Limpiar marcadores de búsqueda", "action": "clear-markers" },
+      { "label": "Descargar POIs visibles (GPX/JSON)", "action": "download-pois" }
+    ]
+  }
+]

@@ -62,30 +62,6 @@ const scale = new maplibregl.ScaleControl({
 });
 map.addControl(scale, 'top-left');
 
-// Evento cambio de mapa base
-document.getElementById('map-select').addEventListener('change', (e) => {
-  const selectedKey = e.target.value;
-  const newSource = baseMaps[selectedKey];
-
-  if (map.getLayer('base-layer')) map.removeLayer('base-layer');
-  if (map.getSource('base-tiles')) map.removeSource('base-tiles');
-
-  map.addSource('base-tiles', {
-    type: 'raster',
-    tiles: newSource.tiles,
-    tileSize: 256,
-    attribution: newSource.attribution
-  });
-
-  map.addLayer({
-    id: 'base-layer',
-    type: 'raster',
-    source: 'base-tiles',
-    minzoom: 0,
-    maxzoom: newSource.maxzoom
-  });
-});
-
 // Lógica del buscador de lugares
 const searchToggle = document.getElementById('search-toggle');
 const searchBox = document.getElementById('search-box');
@@ -153,9 +129,8 @@ let startTransform = 0;
 function getSnapPoints() {
   const vh = window.innerHeight;
   return {
-    SNAP_FULL: 0,
-    SNAP_HALF: vh * 0.5,
-    SNAP_CLOSED: vh - 50
+    SNAP_FULL: vh * 0.5,
+    SNAP_CLOSED: vh - 58
   };
 }
 
@@ -186,7 +161,6 @@ window.addEventListener('touchmove', (e) => {
   let newY = startTransform + delta;
 
   const { SNAP_FULL, SNAP_CLOSED } = getSnapPoints();
-
   if (newY < SNAP_FULL) newY = SNAP_FULL;
   if (newY > SNAP_CLOSED) newY = SNAP_CLOSED;
 
@@ -199,20 +173,22 @@ window.addEventListener('touchend', () => {
   sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
 
   const finalY = getTranslateY();
-  const { SNAP_FULL, SNAP_HALF, SNAP_CLOSED } = getSnapPoints();
+  const { SNAP_FULL, SNAP_CLOSED } = getSnapPoints();
+  const threshold = (SNAP_FULL + SNAP_CLOSED) / 2;
 
-  if (finalY < (SNAP_FULL + SNAP_HALF) / 2) {
+  if (finalY < threshold) {
     sheet.style.transform = `translateY(${SNAP_FULL}px)`;
-  } else if (finalY > (SNAP_HALF + SNAP_CLOSED) / 2) {
-    sheet.style.transform = `translateY(${SNAP_CLOSED}px)`;
   } else {
-    sheet.style.transform = `translateY(${SNAP_HALF}px)`;
+    sheet.style.transform = `translateY(${SNAP_CLOSED}px)`;
   }
 });
 
 window.addEventListener('resize', initSheetPosition);
 
 // Carga dinámica de categorías desde categories.json
+let categoriesHTML = '';
+const sheetContent = document.getElementById('sheet-content');
+
 async function loadCategories() {
   try {
     const response = await fetch('categories.json');
@@ -257,6 +233,9 @@ async function loadCategories() {
     });
 
     initCategoryEvents();
+    
+    // Guardar el HTML completo una vez renderizadas las categorías reales
+    categoriesHTML = sheetContent.innerHTML;
 
   } catch (error) {
     console.error('Error al cargar las categorías:', error);
@@ -304,7 +283,6 @@ function initCategoryEvents() {
     }
   });
 
-  // Switch "Expandir nodos"
   const expandToggle = document.getElementById('expand-nodes-toggle');
   if (expandToggle) {
     expandToggle.addEventListener('change', (e) => {
@@ -320,5 +298,164 @@ function initCategoryEvents() {
   }
 }
 
-// Cargar categorías al iniciar
-document.addEventListener('DOMContentLoaded', loadCategories);
+// Configuración incrustada localmente para evitar bloqueos CORS en file://
+const settingsConfig = [
+  {
+    "tab": "settings",
+    "title": "Configuración de Búsqueda de POIs",
+    "description": "Próximamente parámetros avanzados de filtrado de puntos."
+  },
+  {
+    "tab": "maps-layers",
+    "sections": [
+      {
+        "title": "Mapa Base",
+        "type": "radio",
+        "name": "base-map",
+        "options": [
+          { "label": "OpenStreetMap", "value": "osm", "checked": true },
+          { "label": "OpenTopoMap", "value": "topo", "checked": false },
+          { "label": "Satélite (Esri)", "value": "esri", "checked": false }
+        ]
+      },
+      {
+        "title": "Capas Superpuestas",
+        "type": "checkbox",
+        "options": [
+          { "label": "Senderismo (Hiking)", "id": "layer-hiking" },
+          { "label": "Ciclismo (Bicycle)", "id": "layer-bicycle" },
+          { "label": "MTB", "id": "layer-mtb" },
+          { "label": "Deportes de Nieve", "id": "layer-snow" },
+          { "label": "Subir archivo GPX / KML", "id": "layer-upload" }
+        ]
+      }
+    ]
+  },
+  {
+    "tab": "tools",
+    "title": "Utilidades y Datos",
+    "items": [
+      { "label": "Limpiar marcadores de búsqueda", "action": "clear-markers" },
+      { "label": "Descargar POIs visibles (GPX/JSON)", "action": "download-pois" }
+    ]
+  }
+];
+
+const btnMore = document.getElementById('btn-more');
+const headerMain = document.getElementById('header-main-actions');
+const headerTabs = document.getElementById('header-tabs-actions');
+
+btnMore.addEventListener('click', (e) => {
+  e.stopPropagation();
+  headerMain.classList.add('hidden');
+  headerTabs.classList.remove('hidden');
+  renderTabContent('settings');
+
+  const { SNAP_FULL } = getSnapPoints();
+  sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+  sheet.style.transform = `translateY(${SNAP_FULL}px)`;
+});
+
+document.querySelectorAll('.sheet-btn').forEach(btn => {
+  btn.addEventListener('touchstart', (e) => {
+    e.stopPropagation();
+  });
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const tabName = btn.getAttribute('data-tab');
+
+    if (tabName === 'main') {
+      headerTabs.classList.add('hidden');
+      headerMain.classList.remove('hidden');
+      sheetContent.innerHTML = categoriesHTML;
+      initCategoryEvents();
+      return;
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    renderTabContent(tabName);
+  });
+});
+
+function renderTabContent(tabName) {
+  const tabData = settingsConfig.find(t => t.tab === tabName);
+  if (!tabData) return;
+
+  if (tabName === 'settings') {
+    sheetContent.innerHTML = `
+      <div class="settings-group">
+        <div class="settings-section-title">${tabData.title}</div>
+        <p style="font-size: 12px; color: #aaa; padding: 6px 0;">${tabData.description}</p>
+      </div>
+    `;
+  } else if (tabName === 'maps-layers') {
+    let html = '';
+    tabData.sections.forEach(sec => {
+      html += `<div class="settings-group"><div class="settings-section-title">${sec.title}</div><div class="poi-categories">`;
+      sec.options.forEach(opt => {
+        if (sec.type === 'radio') {
+          html += `
+            <label class="checkbox-container" style="padding: 8px 0;">
+              <input type="radio" name="${sec.name}" value="${opt.value}" ${opt.checked ? 'checked' : ''}>
+              <span>${opt.label}</span>
+            </label>
+          `;
+        } else {
+          html += `
+            <li class="category-row">
+              <label class="checkbox-container">
+                <input type="checkbox" id="${opt.id}">
+                <span>${opt.label}</span>
+              </label>
+            </li>
+          `;
+        }
+      });
+      html += `</div></div>`;
+    });
+    sheetContent.innerHTML = html;
+
+    // Eventos para el cambio de mapa base unificado
+    document.querySelectorAll('input[name="base-map"]').forEach(radio => {
+      radio.addEventListener('change', (ev) => {
+        const selectedKey = ev.target.value;
+        const newSource = baseMaps[selectedKey];
+        if (!newSource) return;
+
+        if (map.getLayer('base-layer')) map.removeLayer('base-layer');
+        if (map.getSource('base-tiles')) map.removeSource('base-tiles');
+
+        map.addSource('base-tiles', {
+          type: 'raster',
+          tiles: newSource.tiles,
+          tileSize: 256,
+          attribution: newSource.attribution
+        });
+
+        map.addLayer({
+          id: 'base-layer',
+          type: 'raster',
+          source: 'base-tiles',
+          minzoom: 0,
+          maxzoom: newSource.maxzoom
+        });
+      });
+    });
+  } else if (tabName === 'tools') {
+    let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
+    tabData.items.forEach(item => {
+      html += `<div class="category-row" style="cursor: pointer; padding: 12px 0;"><span>${item.label}</span></div>`;
+    });
+    html += `</div>`;
+    sheetContent.innerHTML = html;
+  }
+}
+
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', () => {
+  loadCategories();
+});
