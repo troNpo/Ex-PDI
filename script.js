@@ -1,4 +1,7 @@
-// Fuentes de mapas base disponibles
+// ==========================================
+// CONFIGURACIÓN Y MAPAS BASE
+// ==========================================
+
 const baseMaps = {
   'osm': {
     tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
@@ -17,10 +20,14 @@ const baseMaps = {
   }
 };
 
-// Variable para el radio de búsqueda en kilómetros (por defecto 5 km)
 let searchRadiusKm = 5.0;
+let poiMarkers = [];
 
-// Inicialización del mapa con Terreno 3D y 85° de Inclinación Libre
+
+// ==========================================
+// INICIALIZACIÓN DE MAPLIBRE Y CONTROLES
+// ==========================================
+
 const map = new maplibregl.Map({
   container: 'map',
   style: {
@@ -33,9 +40,7 @@ const map = new maplibregl.Map({
         attribution: baseMaps['osm'].attribution
       },
       'terrarium-dem': {
-        tiles: [
-          'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'
-        ],
+        tiles: ['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'],
         type: 'raster-dem',
         tileSize: 512,
         encoding: 'terrarium'
@@ -82,7 +87,6 @@ const map = new maplibregl.Map({
   maxPitch: 85    
 });
 
-// Controles nativos con soporte visual de inclinación
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
 map.addControl(
   new maplibregl.GeolocateControl({
@@ -93,23 +97,20 @@ map.addControl(
   'top-right'
 );
 
-// Escala gráfica del mapa
-const scale = new maplibregl.ScaleControl({
-  maxWidth: 100,
-  unit: 'metric'
-});
+const scale = new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' });
 map.addControl(scale, 'top-left');
 
-// Configuración de capas para el cuadrado de búsqueda visual
+
+// ==========================================
+// GESTIÓN DEL ÁREA DE BÚSQUEDA VISUAL
+// ==========================================
+
 map.on('load', () => {
   map.addSource('search-area-source', {
     type: 'geojson',
     data: {
       type: 'Feature',
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[]]
-      }
+      geometry: { type: 'Polygon', coordinates: [[]] }
     }
   });
 
@@ -117,28 +118,22 @@ map.on('load', () => {
     id: 'search-area-fill',
     type: 'fill',
     source: 'search-area-source',
-    paint: {
-      'fill-color': '#b7092b',
-      'fill-opacity': 0.1
-    }
+    paint: { 'fill-color': '#b7092b', 'fill-opacity': 0.1 }
   });
 
   map.addLayer({
     id: 'search-area-border',
     type: 'line',
     source: 'search-area-source',
-    paint: {
-      'line-color': '#b7092b',
-      'line-width': 2,
-      'line-dasharray': [3, 3]
-    }
+    paint: { 'line-color': '#b7092b', 'line-width': 2, 'line-dasharray': [3, 3] }
   });
 
-  // Dibujar el área inicial al cargar
   updateSearchAreaPolygon();
 });
 
-// Actualizar el polígono visual sintonizado con el centro visual (teniendo en cuenta el padding)
+/**
+ * Actualiza el polígono visual en el mapa basándose en el centro y el radio configurado.
+ */
 function updateSearchAreaPolygon() {
   const source = map.getSource('search-area-source');
   if (!source) return;
@@ -152,7 +147,6 @@ function updateSearchAreaPolygon() {
   ];
 
   const center = map.unproject(visualPoint);
-
   const latDelta = searchRadiusKm / 111.0;
   const lngDelta = searchRadiusKm / (111.0 * Math.cos(center.lat * (Math.PI / 180)));
 
@@ -166,11 +160,7 @@ function updateSearchAreaPolygon() {
     geometry: {
       type: 'Polygon',
       coordinates: [[
-        [west, north],
-        [east, north],
-        [east, south],
-        [west, south],
-        [west, north]
+        [west, north], [east, north], [east, south], [west, south], [west, north]
       ]]
     }
   };
@@ -178,56 +168,45 @@ function updateSearchAreaPolygon() {
   source.setData(polygonGeoJSON);
 }
 
-// Actualizar el polígono al mover el mapa
 map.on('move', () => {
   updateSearchAreaPolygon();
 });
 
-// Ajustar el centro visible de MapLibre en función de si el panel está abierto o cerrado
+/**
+ * Ajusta el padding del mapa cuando el panel inferior se expande o contrae.
+ */
 function updateMapPadding() {
   const isSheetOpen = !headerMain.classList.contains('hidden');
   
   if (isSheetOpen) {
     const topOffset = window.innerHeight * 0.25;
-    map.easeTo({
-      padding: { top: topOffset, bottom: 0, left: 0, right: 0 },
-      duration: 300,
-      essential: true
-    });
+    map.easeTo({ padding: { top: topOffset, bottom: 0, left: 0, right: 0 }, duration: 300, essential: true });
   } else {
-    map.easeTo({
-      padding: { top: 0, bottom: 0, left: 0, right: 0 },
-      duration: 300,
-      essential: true
-    });
+    map.easeTo({ padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: 300, essential: true });
   }
 
-  // Sincronizar el polígono mientras se desplaza y al terminar la animación
   setTimeout(updateSearchAreaPolygon, 50);
   setTimeout(updateSearchAreaPolygon, 320);
 }
 
-// Sistema de Toast Visual para iPhone
+
+// ==========================================
+// UTILIDADES VISUALES Y BUSCADOR DE LUGARES
+// ==========================================
+
+/**
+ * Muestra notificaciones flotantes (Toast) temporales.
+ */
 function showToast(message, duration = 3000) {
   let toast = document.getElementById('app-toast');
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'app-toast';
     toast.style.cssText = `
-      position: fixed;
-      bottom: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 13px;
-      z-index: 10000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      text-align: center;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
+      position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.85); color: #fff; padding: 10px 18px;
+      border-radius: 8px; font-size: 13px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      text-align: center; transition: opacity 0.3s ease; pointer-events: none;
     `;
     document.body.appendChild(toast);
   }
@@ -235,67 +214,72 @@ function showToast(message, duration = 3000) {
   toast.style.opacity = '1';
   
   clearTimeout(toast.hideTimeout);
-  toast.hideTimeout = setTimeout(() => {
-    toast.style.opacity = '0';
-  }, duration);
+  toast.hideTimeout = setTimeout(() => { toast.style.opacity = '0'; }, duration);
 }
 
-// Lógica del buscador de lugares superior
 const searchToggle = document.getElementById('search-toggle');
 const searchBox = document.getElementById('search-box');
 const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
 let searchMarker = null;
 
-searchToggle.addEventListener('click', () => {
-  searchBox.classList.toggle('hidden');
-  if (!searchBox.classList.contains('hidden')) {
-    searchInput.focus();
-  } else {
-    searchResults.innerHTML = '';
-  }
-});
+if (searchToggle) {
+  searchToggle.addEventListener('click', () => {
+    searchBox.classList.toggle('hidden');
+    if (!searchBox.classList.contains('hidden')) {
+      searchInput.focus();
+    } else {
+      searchResults.innerHTML = '';
+    }
+  });
+}
 
 let timeout = null;
-searchInput.addEventListener('input', () => {
-  clearTimeout(timeout);
-  const query = searchInput.value.trim();
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    clearTimeout(timeout);
+    const query = searchInput.value.trim();
 
-  if (query.length < 3) {
-    searchResults.innerHTML = '';
-    return;
-  }
+    if (query.length < 3) {
+      searchResults.innerHTML = '';
+      return;
+    }
 
-  timeout = setTimeout(() => {
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
-      .then((res) => res.json())
-      .then((data) => {
-        searchResults.innerHTML = '';
-        data.forEach((item) => {
-          const li = document.createElement('li');
-          li.textContent = item.display_name;
-          li.addEventListener('click', () => {
-            const lat = parseFloat(item.lat);
-            const lon = parseFloat(item.lon);
+    timeout = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
+        .then((res) => res.json())
+        .then((data) => {
+          searchResults.innerHTML = '';
+          data.forEach((item) => {
+            const li = document.createElement('li');
+            li.textContent = item.display_name;
+            li.addEventListener('click', () => {
+              const lat = parseFloat(item.lat);
+              const lon = parseFloat(item.lon);
 
-            map.flyTo({ center: [lon, lat], zoom: 15 });
+              map.flyTo({ center: [lon, lat], zoom: 15 });
 
-            if (searchMarker) searchMarker.remove();
-            searchMarker = new maplibregl.Marker({ color: '#e74c3c' })
-              .setLngLat([lon, lat])
-              .setPopup(new maplibregl.Popup().setText(item.display_name))
-              .addTo(map);
+              if (searchMarker) searchMarker.remove();
+              searchMarker = new maplibregl.Marker({ color: '#e74c3c' })
+                .setLngLat([lon, lat])
+                .setPopup(new maplibregl.Popup().setText(item.display_name))
+                .addTo(map);
 
-            searchResults.innerHTML = '';
-            searchBox.classList.add('hidden');
+              searchResults.innerHTML = '';
+              searchBox.classList.add('hidden');
+            });
+            searchResults.appendChild(li);
           });
-          searchResults.appendChild(li);
         });
-      });
-  }, 400);
-});
+    }, 400);
+  });
+}
 
-// Arrastre e inercia del Bottom Sheet
+
+// ==========================================
+// GESTIÓN DEL PANEL INFERIOR (BOTTOM SHEET)
+// ==========================================
+
 const sheet = document.getElementById('bottom-sheet');
 const sheetHeader = document.getElementById('sheet-header');
 
@@ -306,10 +290,7 @@ let startTransform = 0;
 
 function getSnapPoints() {
   const vh = window.innerHeight;
-  return {
-    SNAP_FULL: vh * 0.5,
-    SNAP_CLOSED: vh - 58
-  };
+  return { SNAP_FULL: vh * 0.5, SNAP_CLOSED: vh - 58 };
 }
 
 function getTranslateY() {
@@ -325,12 +306,14 @@ function initSheetPosition() {
 
 initSheetPosition();
 
-sheetHeader.addEventListener('touchstart', (e) => {
-  isDragging = true;
-  startY = e.touches[0].clientY;
-  startTransform = getTranslateY();
-  sheet.style.transition = 'none';
-});
+if (sheetHeader) {
+  sheetHeader.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    startY = e.touches[0].clientY;
+    startTransform = getTranslateY();
+    sheet.style.transition = 'none';
+  });
+}
 
 window.addEventListener('touchmove', (e) => {
   if (!isDragging) return;
@@ -365,10 +348,17 @@ window.addEventListener('touchend', () => {
 
 window.addEventListener('resize', initSheetPosition);
 
-// Carga dinámica de categorías desde categories.json
+
+// ==========================================
+// CARGA Y GESTIÓN DE CATEGORÍAS (UI)
+// ==========================================
+
 let categoriesHTML = '';
 const sheetContent = document.getElementById('sheet-content');
 
+/**
+ * Carga el archivo categories.json y construye dinámicamente las opciones de filtrado.
+ */
 async function loadCategories() {
   try {
     const response = await fetch('categories.json');
@@ -378,16 +368,16 @@ async function loadCategories() {
     if (!container) return;
     container.innerHTML = '';
 
-    categories.forEach(cat => {
+    categories.forEach((cat, catIndex) => {
       const li = document.createElement('li');
       li.className = 'category-item';
 
       let nodesHTML = '';
-      cat.nodes.forEach(node => {
+      cat.nodes.forEach((node, nodeIndex) => {
         nodesHTML += `
           <li>
             <label class="checkbox-container">
-              <input type="checkbox" data-key="${node.k}" data-val="${node.v}" data-node-id="${node.id}">
+              <input type="checkbox" data-val="${node.v}" data-node-id="${node.id}" data-cat="${catIndex}" data-node="${nodeIndex}">
               <span>${node.name}</span>
             </label>
           </li>
@@ -413,7 +403,7 @@ async function loadCategories() {
     });
 
     initCategoryEvents();
-    categoriesHTML = sheetContent.innerHTML;
+    if (sheetContent) categoriesHTML = sheetContent.innerHTML;
 
   } catch (error) {
     console.error('Error al cargar las categorías:', error);
@@ -421,17 +411,17 @@ async function loadCategories() {
   }
 }
 
+/**
+ * Inicializa los eventos de selección e interacción en la lista de categorías.
+ */
 function initCategoryEvents() {
   const expandToggle = document.getElementById('expand-nodes-toggle');
   if (expandToggle) {
     expandToggle.addEventListener('change', () => {
       const isChecked = expandToggle.checked;
       document.querySelectorAll('.category-item').forEach(item => {
-        if (isChecked) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
+        if (isChecked) item.classList.add('active');
+        else item.classList.remove('active');
       });
     });
   }
@@ -476,21 +466,23 @@ function initCategoryEvents() {
   });
 }
 
-// Configuración de pestañas del panel
+
+// ==========================================
+// CONFIGURACIÓN DE PESTAÑAS Y AJUSTES
+// ==========================================
+
 const settingsConfig = [
   {
     "tab": "settings",
     "title": "Configuración de Búsqueda de POIs",
-    "sections": [
-      {
-        "title": "Radio de Búsqueda alrededor del Centro",
-        "type": "range",
-        "name": "search-radius",
-        "min": 0.5,
-        "max": 20,
-        "step": 0.5
-      }
-    ],
+    "sections": [{
+      "title": "Radio de Búsqueda alrededor del Centro",
+      "type": "range",
+      "name": "search-radius",
+      "min": 0.5,
+      "max": 20,
+      "step": 0.5
+    }],
     "description": "Parámetros avanzados de filtrado de puntos."
   },
   {
@@ -532,27 +524,27 @@ const btnMore = document.getElementById('btn-more');
 const headerMain = document.getElementById('header-main-actions');
 const headerTabs = document.getElementById('header-tabs-actions');
 
-btnMore.addEventListener('click', (e) => {
-  e.stopPropagation();
-  headerMain.classList.add('hidden');
-  headerTabs.classList.remove('hidden');
-  renderTabContent('settings');
+if (btnMore) {
+  btnMore.addEventListener('click', (e) => {
+    e.stopPropagation();
+    headerMain.classList.add('hidden');
+    headerTabs.classList.remove('hidden');
+    renderTabContent('settings');
 
-  const { SNAP_FULL } = getSnapPoints();
-  sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-  sheet.style.transform = `translateY(${SNAP_FULL}px)`;
+    const { SNAP_FULL } = getSnapPoints();
+    sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+    sheet.style.transform = `translateY(${SNAP_FULL}px)`;
 
-  updateMapPadding();
-});
+    updateMapPadding();
+  });
+}
 
 document.querySelectorAll('.sheet-btn').forEach(btn => {
-  btn.addEventListener('touchstart', (e) => {
-    e.stopPropagation();
-  });
+  btn.addEventListener('touchstart', (e) => { e.stopPropagation(); });
 });
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
+  btn.addEventListener('click', () => {
     const tabName = btn.getAttribute('data-tab');
 
     if (tabName === 'main') {
@@ -570,6 +562,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+/**
+ * Renderiza dinámicamente el contenido de las pestañas de configuración del panel.
+ */
 function renderTabContent(tabName) {
   const tabData = settingsConfig.find(t => t.tab === tabName);
   if (!tabData) return;
@@ -598,7 +593,7 @@ function renderTabContent(tabName) {
       rangeInput.addEventListener('input', (ev) => {
         searchRadiusKm = parseFloat(ev.target.value);
         radiusLabel.textContent = `${searchRadiusKm} km`;
-        updateSearchAreaPolygon(); // Actualiza el cuadrado visual en tiempo real
+        updateSearchAreaPolygon();
       });
     }
 
@@ -641,7 +636,7 @@ function renderTabContent(tabName) {
       }
     }
 
-        document.querySelectorAll('input[name="base-map"]').forEach(radio => {
+    document.querySelectorAll('input[name="base-map"]').forEach(radio => {
       radio.addEventListener('change', (ev) => {
         const selectedKey = ev.target.value;
         const newSource = baseMaps[selectedKey];
@@ -667,7 +662,6 @@ function renderTabContent(tabName) {
           maxzoom: newSource.maxzoom
         }, firstOverlay);
 
-        // Volver a pintar el cuadro rojo encima de la nueva capa base
         if (map.getLayer('search-area-fill')) map.removeLayer('search-area-fill');
         if (map.getLayer('search-area-border')) map.removeLayer('search-area-border');
 
@@ -675,48 +669,31 @@ function renderTabContent(tabName) {
           id: 'search-area-fill',
           type: 'fill',
           source: 'search-area-source',
-          paint: {
-            'fill-color': '#b7092b',
-            'fill-opacity': 0.1
-          }
+          paint: { 'fill-color': '#b7092b', 'fill-opacity': 0.1 }
         });
 
         map.addLayer({
           id: 'search-area-border',
           type: 'line',
           source: 'search-area-source',
-          paint: {
-            'line-color': '#b7092b',
-            'line-width': 2,
-            'line-dasharray': [3, 3]
-          }
+          paint: { 'line-color': '#b7092b', 'line-width': 2, 'line-dasharray': [3, 3] }
         });
 
         updateSearchAreaPolygon();
       });
     });
 
-
     const toggleLayerBinding = (id, sourceName) => {
       const chk = document.getElementById(id);
       if (chk) {
         chk.checked = map.getLayer(id) !== undefined;
-
         chk.addEventListener('change', (ev) => {
           if (ev.target.checked) {
             if (!map.getLayer(id)) {
-              map.addLayer({
-                id: id,
-                type: 'raster',
-                source: sourceName,
-                minzoom: 0,
-                maxzoom: 18
-              });
+              map.addLayer({ id: id, type: 'raster', source: sourceName, minzoom: 0, maxzoom: 18 });
             }
           } else {
-            if (map.getLayer(id)) {
-              map.removeLayer(id);
-            }
+            if (map.getLayer(id)) map.removeLayer(id);
           }
         });
       }
@@ -730,10 +707,7 @@ function renderTabContent(tabName) {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     tabData.items.forEach(item => {
       const actionClass = item.action === 'clear-markers' ? 'action-clear-markers' : '';
-      let iconHtml = '';
-      if (item.action === 'clear-markers') {
-        iconHtml = `<img src="icons/trash.svg" alt="Limpiar" width="22" height="22" style="opacity: 0.8;">`;
-      }
+      let iconHtml = item.action === 'clear-markers' ? `<img src="icons/trash.svg" alt="Limpiar" width="22" height="22" style="opacity: 0.8;">` : '';
       html += `
         <div class="category-row ${actionClass}" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
           <span>${item.label}</span>
@@ -753,8 +727,10 @@ function renderTabContent(tabName) {
   }
 }
 
-// LÓGICA DE BÚSQUEDA Y COLORES OSM CARTO
-let poiMarkers = [];
+
+// ==========================================
+// GESTIÓN DE PALETAS DE COLORES Y BÚSQUEDA OPTIMIZADA
+// ==========================================
 
 const btnCheck = document.getElementById('btn-check'); 
 const btnCancel = document.getElementById('btn-cancel'); 
@@ -767,6 +743,9 @@ const categoryPalettes = [
   { base: '#c0392b', shades: ['#c0392b', '#e74c3c', '#ff7675', '#d63031'] }
 ];
 
+/**
+ * Devuelve un color único asignado a la subcategoría según su posición.
+ */
 function getNodeColor(categoryIndex, nodeIndex) {
   const palette = categoryPalettes[categoryIndex % categoryPalettes.length];
   return palette.shades[nodeIndex % palette.shades.length];
@@ -775,31 +754,33 @@ function getNodeColor(categoryIndex, nodeIndex) {
 if (btnCheck) {
   btnCheck.addEventListener('click', () => {
     const categoryItems = document.querySelectorAll('.category-item');
-    const searchQueries = [];
+    const searchTerms = [];
 
-    categoryItems.forEach((catItem, catIndex) => {
+    categoryItems.forEach((catItem) => {
       const childCheckboxes = catItem.querySelectorAll('.subcategory-list input[type="checkbox"]:checked');
       
-      childCheckboxes.forEach((chk, nodeIndex) => {
+      childCheckboxes.forEach((chk) => {
         const val = chk.getAttribute('data-val');
+        const catIndex = parseInt(chk.getAttribute('data-cat'));
+        const nodeIndex = parseInt(chk.getAttribute('data-node'));
         
         if (val) {
-          searchQueries.push({ term: val, catIndex, nodeIndex });
+          const terms = val.split('|');
+          terms.forEach(term => {
+            searchTerms.push({ term: term.trim(), catIndex, nodeIndex });
+          });
         }
       });
     });
 
-    if (searchQueries.length === 0) {
+    if (searchTerms.length === 0) {
       showToast('Selecciona al menos una subcategoría');
       return;
     }
 
     showToast(`Buscando en radio de ${searchRadiusKm} km...`);
-
-    // Actualizar polígono visual antes de buscar
     updateSearchAreaPolygon();
 
-    // Calcular viewbox en base al centro visual exacto del mapa y el radio del slider
     const padding = map.getPadding();
     const container = map.getContainer();
     const visualPoint = [
@@ -811,14 +792,9 @@ if (btnCheck) {
     const latDelta = searchRadiusKm / 111.0;
     const lngDelta = searchRadiusKm / (111.0 * Math.cos(center.lat * (Math.PI / 180)));
 
-    const west = center.lng - lngDelta;
-    const east = center.lng + lngDelta;
-    const north = center.lat + latDelta;
-    const south = center.lat - latDelta;
+    const viewbox = `${center.lng - lngDelta},${center.lat + latDelta},${center.lng + lngDelta},${center.lat - latDelta}`;
 
-    const viewbox = `${west},${north},${east},${south}`;
-
-    fetchPOIsFromNominatim(searchQueries, viewbox);
+    fetchPOIsOptimized(searchTerms, viewbox);
   });
 }
 
@@ -832,22 +808,29 @@ if (btnCancel) {
   });
 }
 
-function fetchPOIsFromNominatim(searchQueries, viewbox) {
+/**
+ * Realiza peticiones concurrentes optimizadas a Nominatim limitando llamadas simultáneas.
+ */
+function fetchPOIsOptimized(searchTerms, viewbox) {
   clearPoiMarkers();
 
-  const totalQueries = searchQueries.length;
-  const dynamicLimit = Math.max(3, Math.floor(15 / Math.sqrt(totalQueries)));
+  const maxConcurrent = 6;
+  const uniqueTerms = Array.from(new Set(searchTerms.map(s => s.term))).slice(0, maxConcurrent);
 
-  const promises = searchQueries.map((item) => {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(item.term)}&viewbox=${viewbox}&bounded=1&limit=${dynamicLimit}`;
+  const promises = uniqueTerms.map((term) => {
+    const originalItem = searchTerms.find(s => s.term === term);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=15`;
     
     return fetch(url, {
       headers: { 'User-Agent': 'EX-PDI-App/1.0' }
     })
     .then(res => res.json())
-    .then(data => data.map(place => ({ ...place, color: getNodeColor(item.catIndex, item.nodeIndex) })))
+    .then(data => data.map(place => ({ 
+      ...place, 
+      color: getNodeColor(originalItem.catIndex, originalItem.nodeIndex) 
+    })))
     .catch(err => {
-      console.error("Error en fetch individual:", err);
+      console.error("Error en fetch de Nominatim:", err);
       return [];
     });
   });
@@ -861,11 +844,19 @@ function fetchPOIsFromNominatim(searchQueries, viewbox) {
       renderPoiMarkers(uniquePlaces);
     })
     .catch(err => {
-      console.error('Error general en Nominatim:', err);
+      console.error('Error general procesando peticiones:', err);
       showToast('Error al consultar la red');
     });
 }
 
+
+// ==========================================
+// RENDERIZADO DE MARCADORES Y EVENTOS GLOBALES
+// ==========================================
+
+/**
+ * Pinta los marcadores de los PDI encontrados sobre el mapa de MapLibre.
+ */
 function renderPoiMarkers(places) {
   if (places.length === 0) {
     showToast('No hay resultados en esta vista');
@@ -886,18 +877,18 @@ function renderPoiMarkers(places) {
   });
 }
 
+/**
+ * Elimina todos los marcadores de PDI activos del mapa.
+ */
 function clearPoiMarkers() {
   poiMarkers.forEach(marker => marker.remove());
   poiMarkers = [];
 }
 
-// Cargar al iniciar
 document.addEventListener('DOMContentLoaded', () => {
   loadCategories();
-
- 
 });
-//serviceWorker
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -905,4 +896,3 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.log('Error al registrar el Service Worker:', err));
   });
 }
-
