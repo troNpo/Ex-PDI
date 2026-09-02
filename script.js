@@ -97,9 +97,6 @@ map.addControl(
   'top-right'
 );
 
-const scale = new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' });
-map.addControl(scale, 'top-left');
-
 
 // ==========================================
 // GESTIÓN DEL ÁREA DE BÚSQUEDA VISUAL
@@ -129,11 +126,9 @@ map.on('load', () => {
   });
 
   updateSearchAreaPolygon();
+  updateSearchFeedbackUI();
 });
 
-/**
- * Actualiza el polígono visual en el mapa basándose en el centro y el radio configurado.
- */
 function updateSearchAreaPolygon() {
   const source = map.getSource('search-area-source');
   if (!source) return;
@@ -172,9 +167,6 @@ map.on('move', () => {
   updateSearchAreaPolygon();
 });
 
-/**
- * Ajusta el padding del mapa cuando el panel inferior se expande o contrae.
- */
 function updateMapPadding() {
   const isSheetOpen = !headerMain.classList.contains('hidden');
   
@@ -194,9 +186,6 @@ function updateMapPadding() {
 // UTILIDADES VISUALES Y BUSCADOR DE LUGARES
 // ==========================================
 
-/**
- * Muestra notificaciones flotantes (Toast) temporales.
- */
 function showToast(message, duration = 3000) {
   let toast = document.getElementById('app-toast');
   if (!toast) {
@@ -356,9 +345,6 @@ window.addEventListener('resize', initSheetPosition);
 let categoriesHTML = '';
 const sheetContent = document.getElementById('sheet-content');
 
-/**
- * Carga el archivo categories.json y construye dinámicamente las opciones de filtrado.
- */
 async function loadCategories() {
   try {
     const response = await fetch('categories.json');
@@ -411,9 +397,64 @@ async function loadCategories() {
   }
 }
 
+function getDynamicSearchParameters(totalSelections) {
+  if (totalSelections <= 1) {
+    return { radius: 5.0, limit: 40, mode: "1 checkbox" };
+  } else if (totalSelections >= 2 && totalSelections <= 4) {
+    return { radius: 3.0, limit: 30, mode: "2-4 checkboxes" };
+  } else {
+    return { radius: 1.5, limit: 15, mode: "5+ checkboxes" };
+  }
+}
+
+function getMapScaleText() {
+  const center = map.getCenter();
+  const zoom = map.getZoom();
+  const metersPerPixel = 40075016.686 * Math.abs(Math.cos(center.lat * Math.PI / 180)) / Math.pow(2, zoom + 8);
+  const totalMeters = metersPerPixel * 100;
+
+  if (totalMeters >= 1000) {
+    return `${(totalMeters / 1000).toFixed(1)} km`;
+  } else {
+    return `${Math.round(totalMeters)} m`;
+  }
+}
+
 /**
- * Inicializa los eventos de selección e interacción en la lista de categorías.
+ * Renderiza el cartel superior ultracompacto con escala y radio adaptativo.
  */
+function updateSearchFeedbackUI() {
+  const checkboxes = document.querySelectorAll('.poi-categories .subcategory-list input[type="checkbox"]:checked');
+  const count = checkboxes.length;
+  
+  const params = getDynamicSearchParameters(count);
+  
+  searchRadiusKm = params.radius;
+  updateSearchAreaPolygon(); 
+
+  const bannerEl = document.getElementById('map-feedback-banner');
+  if (!bannerEl) return;
+
+  const currentScaleText = getMapScaleText();
+
+  bannerEl.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 11px;">
+      <span style="color: #e74c3c; font-weight: bold;">Radio: <b style="color: #fff;">${params.radius} km</b></span>
+      <span style="color: #aaa;">Escala: <span id="dynamic-scale-label" style="color: #fff; font-weight: bold;">${currentScaleText}</span></span>
+    </div>
+    <div style="font-size: 10px; color: #bbb; margin-top: 2px;">
+      Modo: <b style="color: #fff;">${params.mode}</b> (${params.limit} máx.)
+    </div>
+  `;
+}
+
+map.on('zoom', () => {
+  const scaleLabel = document.getElementById('dynamic-scale-label');
+  if (scaleLabel) {
+    scaleLabel.textContent = getMapScaleText();
+  }
+});
+
 function initCategoryEvents() {
   const expandToggle = document.getElementById('expand-nodes-toggle');
   if (expandToggle) {
@@ -436,6 +477,7 @@ function initCategoryEvents() {
         const isChecked = parentCheckbox.checked;
         parentCheckbox.indeterminate = false;
         childCheckboxes.forEach(child => child.checked = isChecked);
+        updateSearchFeedbackUI();
       });
     }
 
@@ -454,6 +496,8 @@ function initCategoryEvents() {
           parentCheckbox.checked = false;
           parentCheckbox.indeterminate = true;
         }
+
+        updateSearchFeedbackUI();
       });
     });
 
@@ -464,6 +508,8 @@ function initCategoryEvents() {
       });
     }
   });
+
+  updateSearchFeedbackUI();
 }
 
 
@@ -472,19 +518,6 @@ function initCategoryEvents() {
 // ==========================================
 
 const settingsConfig = [
-  {
-    "tab": "settings",
-    "title": "Configuración de Búsqueda de POIs",
-    "sections": [{
-      "title": "Radio de Búsqueda alrededor del Centro",
-      "type": "range",
-      "name": "search-radius",
-      "min": 0.5,
-      "max": 20,
-      "step": 0.5
-    }],
-    "description": "Parámetros avanzados de filtrado de puntos."
-  },
   {
     "tab": "maps-layers",
     "sections": [
@@ -514,7 +547,6 @@ const settingsConfig = [
     "tab": "tools",
     "title": "Utilidades y Datos",
     "items": [
-      { "label": "Limpiar marcadores de búsqueda", "action": "clear-markers" },
       { "label": "Descargar POIs visibles (GPX/JSON)", "action": "download-pois" }
     ]
   }
@@ -529,7 +561,7 @@ if (btnMore) {
     e.stopPropagation();
     headerMain.classList.add('hidden');
     headerTabs.classList.remove('hidden');
-    renderTabContent('settings');
+    renderTabContent('maps-layers');
 
     const { SNAP_FULL } = getSnapPoints();
     sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
@@ -562,42 +594,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-/**
- * Renderiza dinámicamente el contenido de las pestañas de configuración del panel.
- */
 function renderTabContent(tabName) {
   const tabData = settingsConfig.find(t => t.tab === tabName);
   if (!tabData) return;
 
-  if (tabName === 'settings') {
-    let html = '';
-    tabData.sections.forEach(sec => {
-      html += `
-        <div class="settings-group">
-          <div class="settings-section-title">${sec.title}</div>
-          <div class="poi-categories" style="padding: 10px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 13px; color: #cccccc;">Distancia seleccionada:</span>
-              <span id="radius-value-label" style="font-size: 15px; font-weight: 700; color: #b7092b;">${searchRadiusKm} km</span>
-            </div>
-            <input type="range" id="search-radius-range" min="${sec.min}" max="${sec.max}" step="${sec.step}" value="${searchRadiusKm}" style="width: 100%; accent-color: #b7092b; cursor: pointer;">
-          </div>
-        </div>`;
-    });
-    sheetContent.innerHTML = html;
-
-    const rangeInput = document.getElementById('search-radius-range');
-    const radiusLabel = document.getElementById('radius-value-label');
-
-    if (rangeInput) {
-      rangeInput.addEventListener('input', (ev) => {
-        searchRadiusKm = parseFloat(ev.target.value);
-        radiusLabel.textContent = `${searchRadiusKm} km`;
-        updateSearchAreaPolygon();
-      });
-    }
-
-  } else if (tabName === 'maps-layers') {
+  if (tabName === 'maps-layers') {
     let html = '';
     tabData.sections.forEach(sec => {
       html += `<div class="settings-group"><div class="settings-section-title">${sec.title}</div><div class="poi-categories">`;
@@ -706,30 +707,19 @@ function renderTabContent(tabName) {
   } else if (tabName === 'tools') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     tabData.items.forEach(item => {
-      const actionClass = item.action === 'clear-markers' ? 'action-clear-markers' : '';
-      let iconHtml = item.action === 'clear-markers' ? `<img src="icons/trash.svg" alt="Limpiar" width="22" height="22" style="opacity: 0.8;">` : '';
       html += `
-        <div class="category-row ${actionClass}" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+        <div class="category-row" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
           <span>${item.label}</span>
-          ${iconHtml}
         </div>`;
     });
     html += `</div>`;
     sheetContent.innerHTML = html;
-
-    const btnClearAction = sheetContent.querySelector('.action-clear-markers');
-    if (btnClearAction) {
-      btnClearAction.addEventListener('click', () => {
-        clearPoiMarkers();
-        showToast('Marcadores eliminados de la pantalla');
-      });
-    }
   }
 }
 
 
 // ==========================================
-// GESTIÓN DE PALETAS DE COLORES Y BÚSQUEDA OPTIMIZADA
+// GESTIÓN DE BÚSQUEDA Y MARCADORES
 // ==========================================
 
 const btnCheck = document.getElementById('btn-check'); 
@@ -743,9 +733,6 @@ const categoryPalettes = [
   { base: '#c0392b', shades: ['#c0392b', '#e74c3c', '#ff7675', '#d63031'] }
 ];
 
-/**
- * Devuelve un color único asignado a la subcategoría según su posición.
- */
 function getNodeColor(categoryIndex, nodeIndex) {
   const palette = categoryPalettes[categoryIndex % categoryPalettes.length];
   return palette.shades[nodeIndex % palette.shades.length];
@@ -773,13 +760,19 @@ if (btnCheck) {
       });
     });
 
-    if (searchTerms.length === 0) {
+    const totalSelections = searchTerms.length;
+
+    if (totalSelections === 0) {
       showToast('Selecciona al menos una subcategoría');
       return;
     }
 
-    showToast(`Buscando en radio de ${searchRadiusKm} km...`);
+    const { radius, limit } = getDynamicSearchParameters(totalSelections);
+
+    searchRadiusKm = radius;
+    showToast(`Buscando ${totalSelections} concepto(s) en ${searchRadiusKm} km...`);
     updateSearchAreaPolygon();
+    updateSearchFeedbackUI();
 
     const padding = map.getPadding();
     const container = map.getContainer();
@@ -794,7 +787,7 @@ if (btnCheck) {
 
     const viewbox = `${center.lng - lngDelta},${center.lat + latDelta},${center.lng + lngDelta},${center.lat - latDelta}`;
 
-    fetchPOIsOptimized(searchTerms, viewbox);
+    fetchPOIsOptimized(searchTerms, viewbox, limit);
   });
 }
 
@@ -804,14 +797,12 @@ if (btnCancel) {
       chk.checked = false;
       chk.indeterminate = false;
     });
+    updateSearchFeedbackUI();
     showToast('Filtros reiniciados');
   });
 }
 
-/**
- * Realiza peticiones concurrentes optimizadas a Nominatim limitando llamadas simultáneas.
- */
-function fetchPOIsOptimized(searchTerms, viewbox) {
+function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
   clearPoiMarkers();
 
   const maxConcurrent = 6;
@@ -819,7 +810,7 @@ function fetchPOIsOptimized(searchTerms, viewbox) {
 
   const promises = uniqueTerms.map((term) => {
     const originalItem = searchTerms.find(s => s.term === term);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=15`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=${dynamicLimit}`;
     
     return fetch(url, {
       headers: { 'User-Agent': 'EX-PDI-App/1.0' }
@@ -849,17 +840,30 @@ function fetchPOIsOptimized(searchTerms, viewbox) {
     });
 }
 
+function updateHeaderTrashVisibility() {
+  const btnClearHeader = document.getElementById('btn-clear-markers-header');
+  if (!btnClearHeader) return;
 
-// ==========================================
-// RENDERIZADO DE MARCADORES Y EVENTOS GLOBALES
-// ==========================================
+  if (poiMarkers.length > 0) {
+    btnClearHeader.classList.remove('hidden');
+  } else {
+    btnClearHeader.classList.add('hidden');
+  }
+}
 
-/**
- * Pinta los marcadores de los PDI encontrados sobre el mapa de MapLibre.
- */
+const btnClearHeader = document.getElementById('btn-clear-markers-header');
+if (btnClearHeader) {
+  btnClearHeader.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearPoiMarkers();
+    showToast('Marcadores eliminados de la pantalla');
+  });
+}
+
 function renderPoiMarkers(places) {
   if (places.length === 0) {
     showToast('No hay resultados en esta vista');
+    updateHeaderTrashVisibility();
     return;
   }
 
@@ -875,14 +879,14 @@ function renderPoiMarkers(places) {
 
     poiMarkers.push(marker);
   });
+
+  updateHeaderTrashVisibility();
 }
 
-/**
- * Elimina todos los marcadores de PDI activos del mapa.
- */
 function clearPoiMarkers() {
   poiMarkers.forEach(marker => marker.remove());
   poiMarkers = [];
+  updateHeaderTrashVisibility();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
