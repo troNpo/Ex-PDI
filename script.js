@@ -97,10 +97,43 @@ map.addControl(
   'top-right'
 );
 
+const scale = new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' });
+map.addControl(scale, 'top-left');
+
 
 // ==========================================
-// GESTIÓN DEL ÁREA DE BÚSQUEDA VISUAL
+// GESTIÓN DEL ÁREA DE BÚSQUEDA VISUAL Y CARTEL
 // ==========================================
+
+const sheetContent = document.getElementById('sheet-content');
+
+// Crear cartel informativo flotante (Escala + Radio + Modo)
+const feedbackBanner = document.createElement('div');
+feedbackBanner.className = 'map-feedback-banner';
+feedbackBanner.innerHTML = `
+  <div style="font-size: 11px; color: #ffcccc; margin-bottom: 2px;">
+    <strong>Radio:</strong> <span id="banner-radius">${searchRadiusKm} km</span> &nbsp;|&nbsp; 
+    <strong>Escala:</strong> <span id="banner-scale">-</span>
+  </div>
+  <div style="font-size: 11px; color: #ffffff;">
+    <strong>Modo:</strong> <span id="banner-mode">1 checkbox (40 máx.)</span>
+  </div>
+`;
+document.body.appendChild(feedbackBanner);
+
+function updateFeedbackBanner() {
+  const scaleEl = document.getElementById('banner-scale');
+  const radiusEl = document.getElementById('banner-radius');
+  
+  if (radiusEl) radiusEl.textContent = `${searchRadiusKm} km`;
+  
+  if (scaleEl) {
+    const scaleElem = document.querySelector('.maplibregl-ctrl-scale');
+    if (scaleElem) {
+      scaleEl.textContent = scaleElem.textContent;
+    }
+  }
+}
 
 map.on('load', () => {
   map.addSource('search-area-source', {
@@ -126,7 +159,7 @@ map.on('load', () => {
   });
 
   updateSearchAreaPolygon();
-  updateSearchFeedbackUI();
+  setInterval(updateFeedbackBanner, 1000);
 });
 
 function updateSearchAreaPolygon() {
@@ -161,14 +194,18 @@ function updateSearchAreaPolygon() {
   };
 
   source.setData(polygonGeoJSON);
+  updateFeedbackBanner();
 }
 
 map.on('move', () => {
   updateSearchAreaPolygon();
 });
 
+const headerMain = document.getElementById('header-main-actions');
+const headerTabs = document.getElementById('header-tabs-actions');
+
 function updateMapPadding() {
-  const isSheetOpen = !headerMain.classList.contains('hidden');
+  const isSheetOpen = headerMain && !headerMain.classList.contains('hidden');
   
   if (isSheetOpen) {
     const topOffset = window.innerHeight * 0.25;
@@ -343,7 +380,6 @@ window.addEventListener('resize', initSheetPosition);
 // ==========================================
 
 let categoriesHTML = '';
-const sheetContent = document.getElementById('sheet-content');
 
 async function loadCategories() {
   try {
@@ -397,64 +433,6 @@ async function loadCategories() {
   }
 }
 
-function getDynamicSearchParameters(totalSelections) {
-  if (totalSelections <= 1) {
-    return { radius: 5.0, limit: 40, mode: "1 checkbox" };
-  } else if (totalSelections >= 2 && totalSelections <= 4) {
-    return { radius: 3.0, limit: 30, mode: "2-4 checkboxes" };
-  } else {
-    return { radius: 1.5, limit: 15, mode: "5+ checkboxes" };
-  }
-}
-
-function getMapScaleText() {
-  const center = map.getCenter();
-  const zoom = map.getZoom();
-  const metersPerPixel = 40075016.686 * Math.abs(Math.cos(center.lat * Math.PI / 180)) / Math.pow(2, zoom + 8);
-  const totalMeters = metersPerPixel * 100;
-
-  if (totalMeters >= 1000) {
-    return `${(totalMeters / 1000).toFixed(1)} km`;
-  } else {
-    return `${Math.round(totalMeters)} m`;
-  }
-}
-
-/**
- * Renderiza el cartel superior ultracompacto con escala y radio adaptativo.
- */
-function updateSearchFeedbackUI() {
-  const checkboxes = document.querySelectorAll('.poi-categories .subcategory-list input[type="checkbox"]:checked');
-  const count = checkboxes.length;
-  
-  const params = getDynamicSearchParameters(count);
-  
-  searchRadiusKm = params.radius;
-  updateSearchAreaPolygon(); 
-
-  const bannerEl = document.getElementById('map-feedback-banner');
-  if (!bannerEl) return;
-
-  const currentScaleText = getMapScaleText();
-
-  bannerEl.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 11px;">
-      <span style="color: #e74c3c; font-weight: bold;">Radio: <b style="color: #fff;">${params.radius} km</b></span>
-      <span style="color: #aaa;">Escala: <span id="dynamic-scale-label" style="color: #fff; font-weight: bold;">${currentScaleText}</span></span>
-    </div>
-    <div style="font-size: 10px; color: #bbb; margin-top: 2px;">
-      Modo: <b style="color: #fff;">${params.mode}</b> (${params.limit} máx.)
-    </div>
-  `;
-}
-
-map.on('zoom', () => {
-  const scaleLabel = document.getElementById('dynamic-scale-label');
-  if (scaleLabel) {
-    scaleLabel.textContent = getMapScaleText();
-  }
-});
-
 function initCategoryEvents() {
   const expandToggle = document.getElementById('expand-nodes-toggle');
   if (expandToggle) {
@@ -477,7 +455,6 @@ function initCategoryEvents() {
         const isChecked = parentCheckbox.checked;
         parentCheckbox.indeterminate = false;
         childCheckboxes.forEach(child => child.checked = isChecked);
-        updateSearchFeedbackUI();
       });
     }
 
@@ -496,8 +473,6 @@ function initCategoryEvents() {
           parentCheckbox.checked = false;
           parentCheckbox.indeterminate = true;
         }
-
-        updateSearchFeedbackUI();
       });
     });
 
@@ -508,8 +483,6 @@ function initCategoryEvents() {
       });
     }
   });
-
-  updateSearchFeedbackUI();
 }
 
 
@@ -547,20 +520,25 @@ const settingsConfig = [
     "tab": "tools",
     "title": "Utilidades y Datos",
     "items": [
+      { "label": "Limpiar marcadores de búsqueda", "action": "clear-markers" },
       { "label": "Descargar POIs visibles (GPX/JSON)", "action": "download-pois" }
     ]
   }
 ];
 
 const btnMore = document.getElementById('btn-more');
-const headerMain = document.getElementById('header-main-actions');
-const headerTabs = document.getElementById('header-tabs-actions');
 
 if (btnMore) {
   btnMore.addEventListener('click', (e) => {
     e.stopPropagation();
     headerMain.classList.add('hidden');
     headerTabs.classList.remove('hidden');
+    
+    // Seleccionar por defecto la pestaña de mapas-layers al pulsar ajustes
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const defaultTabBtn = document.querySelector('.tab-btn[data-tab="maps-layers"]');
+    if (defaultTabBtn) defaultTabBtn.classList.add('active');
+    
     renderTabContent('maps-layers');
 
     const { SNAP_FULL } = getSnapPoints();
@@ -594,9 +572,25 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+/**
+ * Renderiza dinámicamente el contenido de las pestañas de configuración del panel.
+ */
 function renderTabContent(tabName) {
   const tabData = settingsConfig.find(t => t.tab === tabName);
-  if (!tabData) return;
+  
+  // Si la pestaña no existe o está vacía (como la de descargas)
+  if (!tabData) {
+    if (tabName === 'download' || tabName === 'downloads') {
+      sheetContent.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #888; font-size: 13px;">
+          Sección vacía
+        </div>
+      `;
+    } else {
+      sheetContent.innerHTML = '';
+    }
+    return;
+  }
 
   if (tabName === 'maps-layers') {
     let html = '';
@@ -707,19 +701,30 @@ function renderTabContent(tabName) {
   } else if (tabName === 'tools') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     tabData.items.forEach(item => {
+      const actionClass = item.action === 'clear-markers' ? 'action-clear-markers' : '';
+      let iconHtml = item.action === 'clear-markers' ? `<img src="icons/trash.svg" alt="Limpiar" width="22" height="22" style="opacity: 0.8;">` : '';
       html += `
-        <div class="category-row" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+        <div class="category-row ${actionClass}" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
           <span>${item.label}</span>
+          ${iconHtml}
         </div>`;
     });
     html += `</div>`;
     sheetContent.innerHTML = html;
+
+    const btnClearAction = sheetContent.querySelector('.action-clear-markers');
+    if (btnClearAction) {
+      btnClearAction.addEventListener('click', () => {
+        clearPoiMarkers();
+        showToast('Marcadores eliminados de la pantalla');
+      });
+    }
   }
 }
 
 
 // ==========================================
-// GESTIÓN DE BÚSQUEDA Y MARCADORES
+// GESTIÓN DE BÚSQUEDA OPTIMIZADA DE PDI
 // ==========================================
 
 const btnCheck = document.getElementById('btn-check'); 
@@ -760,19 +765,13 @@ if (btnCheck) {
       });
     });
 
-    const totalSelections = searchTerms.length;
-
-    if (totalSelections === 0) {
+    if (searchTerms.length === 0) {
       showToast('Selecciona al menos una subcategoría');
       return;
     }
 
-    const { radius, limit } = getDynamicSearchParameters(totalSelections);
-
-    searchRadiusKm = radius;
-    showToast(`Buscando ${totalSelections} concepto(s) en ${searchRadiusKm} km...`);
+    showToast(`Buscando en radio de ${searchRadiusKm} km...`);
     updateSearchAreaPolygon();
-    updateSearchFeedbackUI();
 
     const padding = map.getPadding();
     const container = map.getContainer();
@@ -787,7 +786,7 @@ if (btnCheck) {
 
     const viewbox = `${center.lng - lngDelta},${center.lat + latDelta},${center.lng + lngDelta},${center.lat - latDelta}`;
 
-    fetchPOIsOptimized(searchTerms, viewbox, limit);
+    fetchPOIsOptimized(searchTerms, viewbox);
   });
 }
 
@@ -797,12 +796,11 @@ if (btnCancel) {
       chk.checked = false;
       chk.indeterminate = false;
     });
-    updateSearchFeedbackUI();
     showToast('Filtros reiniciados');
   });
 }
 
-function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
+function fetchPOIsOptimized(searchTerms, viewbox) {
   clearPoiMarkers();
 
   const maxConcurrent = 6;
@@ -810,7 +808,7 @@ function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
 
   const promises = uniqueTerms.map((term) => {
     const originalItem = searchTerms.find(s => s.term === term);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=${dynamicLimit}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}&viewbox=${viewbox}&bounded=1&limit=15`;
     
     return fetch(url, {
       headers: { 'User-Agent': 'EX-PDI-App/1.0' }
@@ -840,30 +838,14 @@ function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
     });
 }
 
-function updateHeaderTrashVisibility() {
-  const btnClearHeader = document.getElementById('btn-clear-markers-header');
-  if (!btnClearHeader) return;
 
-  if (poiMarkers.length > 0) {
-    btnClearHeader.classList.remove('hidden');
-  } else {
-    btnClearHeader.classList.add('hidden');
-  }
-}
-
-const btnClearHeader = document.getElementById('btn-clear-markers-header');
-if (btnClearHeader) {
-  btnClearHeader.addEventListener('click', (e) => {
-    e.stopPropagation();
-    clearPoiMarkers();
-    showToast('Marcadores eliminados de la pantalla');
-  });
-}
+// ==========================================
+// RENDERIZADO DE MARCADORES Y EVENTOS GLOBALES
+// ==========================================
 
 function renderPoiMarkers(places) {
   if (places.length === 0) {
     showToast('No hay resultados en esta vista');
-    updateHeaderTrashVisibility();
     return;
   }
 
@@ -879,14 +861,11 @@ function renderPoiMarkers(places) {
 
     poiMarkers.push(marker);
   });
-
-  updateHeaderTrashVisibility();
 }
 
 function clearPoiMarkers() {
   poiMarkers.forEach(marker => marker.remove());
   poiMarkers = [];
-  updateHeaderTrashVisibility();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
