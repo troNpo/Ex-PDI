@@ -1,18 +1,19 @@
 {
   "name": "Ex-PDI",
   "short_name": "Ex-PDI",
-  "start_url": "/",
+  "start_url": "/Ex-PDI/",
+  "scope": "/Ex-PDI/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#b7092b",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "/Ex-PDI/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "/Ex-PDI/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
