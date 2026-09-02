@@ -1,4 +1,13 @@
-# Ex-PDI
+<p align="center">
+  <img src="icons/icon-512.png" alt="Ex-PDI Logo" width="160" height="160">
+</p>
+
+<h1 align="center">Ex-PDI</h1>
+
+<p align="center">
+  <b>Aplicación web progresiva (PWA) de mapas y búsqueda de PDI con interfaz oscura y personalizada.</b>
+</p>
+
 
 **Ex-PDI** es una herramienta web interactiva orientada a la búsqueda, visualización y filtrado de Puntos de Interés (POIs / PDIs) sobre mapas dinámicos.
 
