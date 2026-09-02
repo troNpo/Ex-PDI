@@ -203,6 +203,16 @@ map.on('move', () => {
 
 const headerMain = document.getElementById('header-main-actions');
 const headerTabs = document.getElementById('header-tabs-actions');
+const btnClearMarkersHeader = document.getElementById('btn-clear-markers-header');
+
+function updateClearMarkersButtonVisibility() {
+  if (!btnClearMarkersHeader) return;
+  if (poiMarkers.length > 0) {
+    btnClearMarkersHeader.classList.remove('hidden');
+  } else {
+    btnClearMarkersHeader.classList.add('hidden');
+  }
+}
 
 function updateMapPadding() {
   const isSheetOpen = headerMain && !headerMain.classList.contains('hidden');
@@ -374,6 +384,15 @@ window.addEventListener('touchend', () => {
 
 window.addEventListener('resize', initSheetPosition);
 
+// Evento para el botón de limpiar marcadores en la cabecera roja
+if (btnClearMarkersHeader) {
+  btnClearMarkersHeader.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearPoiMarkers();
+    showToast('Marcadores eliminados del mapa');
+  });
+}
+
 
 // ==========================================
 // CARGA Y GESTIÓN DE CATEGORÍAS (UI)
@@ -520,7 +539,6 @@ const settingsConfig = [
     "tab": "tools",
     "title": "Utilidades y Datos",
     "items": [
-      { "label": "Limpiar marcadores de búsqueda", "action": "clear-markers" },
       { "label": "Descargar POIs visibles (GPX/JSON)", "action": "download-pois" }
     ]
   }
@@ -534,7 +552,6 @@ if (btnMore) {
     headerMain.classList.add('hidden');
     headerTabs.classList.remove('hidden');
     
-    // Seleccionar por defecto la pestaña de mapas-layers al pulsar ajustes
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     const defaultTabBtn = document.querySelector('.tab-btn[data-tab="maps-layers"]');
     if (defaultTabBtn) defaultTabBtn.classList.add('active');
@@ -578,7 +595,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 function renderTabContent(tabName) {
   const tabData = settingsConfig.find(t => t.tab === tabName);
   
-  // Si la pestaña no existe o está vacía (como la de descargas)
   if (!tabData) {
     if (tabName === 'download' || tabName === 'downloads') {
       sheetContent.innerHTML = `
@@ -701,24 +717,13 @@ function renderTabContent(tabName) {
   } else if (tabName === 'tools') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     tabData.items.forEach(item => {
-      const actionClass = item.action === 'clear-markers' ? 'action-clear-markers' : '';
-      let iconHtml = item.action === 'clear-markers' ? `<img src="icons/trash.svg" alt="Limpiar" width="22" height="22" style="opacity: 0.8;">` : '';
       html += `
-        <div class="category-row ${actionClass}" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
+        <div class="category-row" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
           <span>${item.label}</span>
-          ${iconHtml}
         </div>`;
     });
     html += `</div>`;
     sheetContent.innerHTML = html;
-
-    const btnClearAction = sheetContent.querySelector('.action-clear-markers');
-    if (btnClearAction) {
-      btnClearAction.addEventListener('click', () => {
-        clearPoiMarkers();
-        showToast('Marcadores eliminados de la pantalla');
-      });
-    }
   }
 }
 
@@ -846,6 +851,7 @@ function fetchPOIsOptimized(searchTerms, viewbox) {
 function renderPoiMarkers(places) {
   if (places.length === 0) {
     showToast('No hay resultados en esta vista');
+    updateClearMarkersButtonVisibility();
     return;
   }
 
@@ -861,11 +867,14 @@ function renderPoiMarkers(places) {
 
     poiMarkers.push(marker);
   });
+
+  updateClearMarkersButtonVisibility();
 }
 
 function clearPoiMarkers() {
   poiMarkers.forEach(marker => marker.remove());
   poiMarkers = [];
+  updateClearMarkersButtonVisibility();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

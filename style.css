@@ -1,9 +1,12 @@
-/* Estilos globales */
+/* ==========================================
+   ESTILOS GLOBALES
+   ========================================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
 html, body, #map {
   width: 100vw;
   height: 100dvh;
@@ -13,7 +16,9 @@ html, body, #map {
 }
 
 
-/* Contenedor selector mapas base */
+/* ==========================================
+   CONTENEDOR SELECTOR MAPAS BASE
+   ========================================== */
 #map-selector-container {
   position: absolute;
   top: 10px;
@@ -21,7 +26,6 @@ html, body, #map {
   z-index: 10;
 }
 
-/* Selector desplegable de mapas */
 #map-select {
   background-color: rgba(30, 30, 30, 0.85);
   color: #ffffff;
@@ -40,7 +44,10 @@ html, body, #map {
   color: #ffffff;
 }
 
-/*CARTEL INFORMATIVO FLOTANTE (ESCALA + RADIO) */
+
+/* ==========================================
+   CARTEL INFORMATIVO FLOTANTE (FEEDBACK BANNER)
+   ========================================== */
 .map-feedback-banner {
   position: absolute;
   top: 10px; 
@@ -63,8 +70,9 @@ html, body, #map {
 }
 
 
-
-/* Contenedor del buscador */
+/* ==========================================
+   CONTENEDOR DEL BUSCADOR
+   ========================================== */
 #search-container {
   position: absolute;
   top: 145px;
@@ -74,7 +82,6 @@ html, body, #map {
   align-items: center;
 }
 
-/* Botón de la lupa */
 #search-toggle {
   width: 30px !important;
   height: 30px !important;
@@ -104,7 +111,6 @@ html, body, #map {
   filter: invert(100%);
 }
 
-/* Caja de entrada del buscador */
 #search-box {
   position: relative;
   margin-right: 6px;
@@ -155,7 +161,10 @@ html, body, #map {
   color: #ffffff;
 }
 
-/* Controles nativos MapLibre en modo blanco / alto contraste corregidos */
+
+/* ==========================================
+   CONTROLES NATIVOS MAPLIBRE
+   ========================================== */
 .maplibregl-ctrl-group {
   background-color: rgba(30, 30, 30, 0.9) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -174,10 +183,9 @@ html, body, #map {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
+/* Ocultar la escala nativa ya que usamos el cartel informativo flotante */
 .maplibregl-ctrl-scale {
-  background-color: rgba(30, 30, 30, 0.8) !important;
-  color: #ffffff !important;
-  border-color: #ffffff !important;
+  display: none !important;
 }
 
 .maplibregl-ctrl-attrib {
@@ -189,7 +197,10 @@ html, body, #map {
   color: #ffffff !important;
 }
 
-/* Panel deslizante (Bottom Sheet) */
+
+/* ==========================================
+   PANEL DESLIZANTE (BOTTOM SHEET)
+   ========================================== */
 #bottom-sheet {
   position: fixed;
   top: 0;
@@ -225,7 +236,6 @@ html, body, #map {
   flex-shrink: 0;
 }
 
-/* Asa / Indicador táctil superior */
 .drag-handle {
   width: 36px;
   height: 4px;
@@ -234,7 +244,15 @@ html, body, #map {
   margin-bottom: 4px;
 }
 
-/* Ajuste de distribución para título y botones */
+/* Estados de la cabecera (Principal vs Pestañas de configuración) */
+#header-main-actions,
+#header-tabs-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .header-top-row {
   width: 100%;
   display: flex;
@@ -264,19 +282,7 @@ html, body, #map {
   padding: 4px;
 }
 
-/* Estilo específico para el botón de papelera en la cabecera */
-#btn-clear-markers-header {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  padding: 2px 6px;
-  transition: background-color 0.2s;
-}
-
-#btn-clear-markers-header:hover {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-/* Forzar que los iconos svg o img dentro de la cabecera sean blancos */
+/* Forzar iconos blancos en la cabecera */
 #sheet-header img,
 #sheet-header svg,
 .sheet-actions img,
@@ -291,17 +297,7 @@ html, body, #map {
   filter: brightness(0) invert(1);
 }
 
-/* ==========================================
-   GESTIÓN DE PESTAÑAS EN LA CABECERA
-   ========================================== */
-#header-main-actions,
-#header-tabs-actions {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
+/* Barra de pestañas superiores */
 .tabs-bar {
   width: 100%;
   display: flex;
@@ -318,13 +314,14 @@ html, body, #map {
   cursor: pointer;
   padding: 4px 8px;
   opacity: 0.6;
-  transition: opacity 0.2s ease, border-bottom 0.2s ease;
+  transition: opacity 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.tab-btn.active, .tab-btn:hover {
+.tab-btn.active, 
+.tab-btn:hover {
   opacity: 1;
 }
 
@@ -332,7 +329,10 @@ html, body, #map {
   border-bottom: 2px solid #ffffff;
 }
 
-/* Contenido interno */
+
+/* ==========================================
+   CONTENIDO INTERNO DEL SHEET
+   ========================================== */
 #sheet-content {
   flex: 1 1 auto;
   min-height: 0;
@@ -343,7 +343,6 @@ html, body, #map {
   padding: 12px 16px;
 }
 
-/* Subcabecera de categorías */
 .category-subheader {
   display: flex;
   align-items: center;
@@ -368,7 +367,7 @@ html, body, #map {
   color: #cccccc;
 }
 
-/* Switch ON/OFF estilo nativo */
+/* Switch ON/OFF */
 .switch {
   position: relative;
   display: inline-block;
@@ -414,13 +413,14 @@ input:checked + .slider:before {
   transform: translateX(18px);
 }
 
-/* Estilos del árbol de categorías */
+/* Árbol de categorías y listas */
 .poi-categories {
   list-style: none;
   margin-top: 8px;
 }
 
-.category-row, .subcategory-list li {
+.category-row, 
+.subcategory-list li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -429,14 +429,12 @@ input:checked + .slider:before {
   font-size: 13px;
 }
 
-/* Ocultar subcategorías por defecto */
 .subcategory-list {
   list-style: none;
   display: none;
   padding-left: 20px;
 }
 
-/* Mostrar cuando la categoría madre esté activa */
 .category-item.active .subcategory-list {
   display: block;
 }
@@ -448,7 +446,6 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
-/* Checkbox personalizado con relleno rojo */
 .checkbox-container input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
@@ -490,7 +487,6 @@ input:checked + .slider:before {
   background-color: #ffffff;
 }
 
-/* Icono de flecha circular */
 .arrow-icon-btn {
   background: transparent;
   border: none;
@@ -506,7 +502,6 @@ input:checked + .slider:before {
   transform: rotate(90deg);
 }
 
-/* Corrección de tamaño y visualización para los iconos de categorías */
 .category-row img,
 .subcategory-list img,
 .category-row svg,
