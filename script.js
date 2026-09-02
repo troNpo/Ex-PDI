@@ -365,6 +365,7 @@ window.addEventListener('resize', initSheetPosition);
 // ==========================================
 
 const sheetContent = document.getElementById('sheet-content');
+let initialSheetHTML = '';
 
 async function loadCategories() {
   try {
@@ -418,7 +419,6 @@ async function loadCategories() {
 }
 
 function getDynamicSearchParameters(totalSelections) {
-  // Si no hay selecciones (0), tratamos por defecto como 1 checkbox
   if (totalSelections <= 1) {
     return { radius: 5.0, limit: 40, mode: "1 checkbox" };
   } else if (totalSelections >= 2 && totalSelections <= 5) {
@@ -445,7 +445,6 @@ function updateSearchFeedbackUI() {
   const checkboxes = document.querySelectorAll('.poi-categories .subcategory-list input[type="checkbox"]:checked');
   const count = checkboxes.length;
   
-  // Si count es 0, pasamos 0 para que coja los parámetros por defecto de 1 checkbox
   const params = getDynamicSearchParameters(count === 0 ? 1 : count);
   
   searchRadiusKm = params.radius;
@@ -533,12 +532,24 @@ function initCategoryEvents() {
   updateSearchFeedbackUI();
 }
 
-
 // ==========================================
 // CONFIGURACIÓN DE PESTAÑAS Y PERSISTENCIA
 // ==========================================
 
 const settingsConfig = [
+  {
+    "tab": "settings",
+    "title": "Opciones de Búsqueda de Categorías",
+    "items": [
+      { 
+        "label": "Mantener checkboxes seleccionados tras búsqueda", 
+        "type": "switch", 
+        "id": "setting-keep-checkboxes", 
+        "checked": false,
+        "icon": "icons/list-check.svg"
+      }
+    ]
+  },
   {
     "tab": "maps-layers",
     "sections": [
@@ -566,9 +577,20 @@ const settingsConfig = [
   },
   {
     "tab": "tools",
-    "title": "Utilidades y Datos",
+    "title": "Ajustes del Visor y Descargas",
     "items": [
-      { "label": "Descargar POIs visibles (GPX/JSON)", "action": "download-pois" }
+      { 
+        "label": "Mantener marcadores en el visor tras nueva búsqueda", 
+        "type": "switch", 
+        "id": "setting-keep-markers", 
+        "checked": false,
+        "icon": "icons/map-marker.svg"
+      },
+      { 
+        "label": "Descargar POIs visibles (GPX/JSON)", 
+        "action": "download-pois",
+        "icon": "icons/file-download.svg"
+      }
     ]
   }
 ];
@@ -619,10 +641,11 @@ if (btnMore) {
     headerTabs.classList.remove('hidden');
     
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const defaultTabBtn = document.querySelector('.tab-btn[data-tab="maps-layers"]');
+    
+    const defaultTabBtn = document.querySelector('.tab-btn[data-tab="settings"]');
     if (defaultTabBtn) defaultTabBtn.classList.add('active');
     
-    renderTabContent('maps-layers');
+    renderTabContent('settings');
 
     const { SNAP_FULL } = getSnapPoints();
     sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
@@ -644,6 +667,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       headerTabs.classList.add('hidden');
       headerMain.classList.remove('hidden');
       
+      // Restauramos la estructura original del panel principal antes de cargar y marcar
+      if (initialSheetHTML) {
+        sheetContent.innerHTML = initialSheetHTML;
+      }
+      
       loadCategories().then(() => {
         restoreSelections();
       });
@@ -662,7 +690,7 @@ function renderTabContent(tabName) {
   const tabData = settingsConfig.find(t => t.tab === tabName);
   
   if (!tabData) {
-    sheetContent.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; font-size: 13px;">Sección vacía</div>`;
+    sheetContent.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; font-size: 13px;">Sección principal / Contenido dinámico</div>`;
     return;
   }
 
@@ -772,16 +800,65 @@ function renderTabContent(tabName) {
     toggleLayerBinding('layer-bicycle', 'waymarked-cycling');
     toggleLayerBinding('layer-mtb', 'waymarked-mtb');
 
-  } else if (tabName === 'tools') {
+  } else if (tabName === 'settings' || tabName === 'tools') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
+    
     tabData.items.forEach(item => {
-      html += `
-        <div class="category-row" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center;">
-          <span>${item.label}</span>
-        </div>`;
+      const iconHTML = item.icon 
+        ? `<img src="${item.icon}" alt="" width="20" height="20" style="margin-right: 12px; opacity: 0.85; flex-shrink: 0;">` 
+        : '';
+
+      if (item.type === 'switch') {
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px;">
+            <div style="display: flex; align-items: center; flex: 1; padding-right: 10px;">
+              ${iconHTML}
+              <span style="color: #ddd;">${item.label}</span>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="${item.id}" ${item.checked ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+              <span class="slider-${item.id}" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .3s; border-radius: 24px;"></span>
+            </label>
+          </div>`;
+      } else {
+        html += `
+          <div class="category-row" style="cursor: pointer; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+            <div style="display: flex; align-items: center;">
+              ${iconHTML}
+              <span style="color: #ddd;">${item.label}</span>
+            </div>
+          </div>`;
+      }
     });
+    
     html += `</div>`;
     sheetContent.innerHTML = html;
+
+    const styleId = 'dynamic-switch-styles';
+    let styleTag = document.getElementById(styleId);
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = styleId;
+      document.head.appendChild(styleTag);
+    }
+    styleTag.innerHTML = `
+      input:checked + span[class^="slider-"] { background-color: #e74c3c !important; }
+      input + span[class^="slider-"]:before {
+        position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+        background-color: white; transition: .3s; border-radius: 50%;
+      }
+      input:checked + span[class^="slider-"]:before { transform: translateX(20px); }
+    `;
+
+    ['setting-keep-checkboxes', 'setting-keep-markers'].forEach(id => {
+      const sw = document.getElementById(id);
+      if (sw) {
+        sw.checked = window[id] !== undefined ? window[id] : false;
+        sw.addEventListener('change', (e) => {
+          window[id] = e.target.checked;
+        });
+      }
+    });
   }
 }
 
@@ -855,10 +932,20 @@ if (btnCheck) {
 
     const viewbox = `${center.lng - lngDelta},${center.lat + latDelta},${center.lng + lngDelta},${center.lat - latDelta}`;
 
-    // Al realizar la búsqueda con éxito, limpiamos las selecciones guardadas provisionales
-    savedCheckedNodeIds = [];
+    const keepCheckboxes = window['setting-keep-checkboxes'] === true;
+    if (keepCheckboxes) {
+      captureCurrentSelections();
+    } else {
+      savedCheckedNodeIds = [];
+    }
 
     fetchPOIsOptimized(searchTerms, viewbox, limit);
+
+    if (keepCheckboxes) {
+      setTimeout(() => {
+        restoreSelections();
+      }, 100);
+    }
   });
 }
 
@@ -875,7 +962,10 @@ if (btnCancel) {
 }
 
 function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
-  clearPoiMarkers();
+  const keepMarkers = window['setting-keep-markers'] === true;
+  if (!keepMarkers) {
+    clearPoiMarkers();
+  }
 
   const maxConcurrent = 6;
   const uniqueTerms = Array.from(new Set(searchTerms.map(s => s.term))).slice(0, maxConcurrent);
@@ -942,13 +1032,16 @@ function clearPoiMarkers() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (sheetContent) {
+    initialSheetHTML = sheetContent.innerHTML;
+  }
   loadCategories();
 });
-
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/Ex-PDI/sw.js')
       .then((reg) => console.log('Service Worker registrado con éxito:', reg.scope))
       .catch((err) => console.log('Error al registrar el Service Worker:', err));
   });
 }
+
