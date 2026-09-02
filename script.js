@@ -22,6 +22,9 @@ const baseMaps = {
 
 let searchRadiusKm = 5.0;
 let poiMarkers = [];
+window['setting-keep-checkboxes'] = false;
+window['setting-keep-markers'] = false;
+
 
 
 // ==========================================
@@ -937,6 +940,17 @@ if (btnCheck) {
       captureCurrentSelections();
     } else {
       savedCheckedNodeIds = [];
+      document.querySelectorAll('.poi-categories .subcategory-list input[type="checkbox"]').forEach(chk => {
+        chk.checked = false;
+      });
+      document.querySelectorAll('.category-item').forEach(item => {
+        const parentCheckbox = item.querySelector('.category-row input[type="checkbox"]');
+        if (parentCheckbox) {
+          parentCheckbox.checked = false;
+          parentCheckbox.indeterminate = false;
+        }
+      });
+      updateSearchFeedbackUI();
     }
 
     fetchPOIsOptimized(searchTerms, viewbox, limit);
@@ -948,6 +962,7 @@ if (btnCheck) {
     }
   });
 }
+
 
 if (btnCancel) {
   btnCancel.addEventListener('click', () => {
