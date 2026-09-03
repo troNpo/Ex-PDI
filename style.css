@@ -289,20 +289,20 @@ html, body, #map {
 .sheet-actions svg,
 .sheet-btn img:not(.app-logo),
 .sheet-btn svg {
-  width: 36px !important;
-  height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 32px !important;
+  height: 33px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
 
 /* Excepción limpia para que el logo conserve sus colores y tamaño a todo color */
 #sheet-header img.app-logo {
-  width: 50px !important;
-  height: 50px !important;
-  max-width: 50px !important;
-  max-height: 50px !important;
+  width: 32px !important;
+  height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
   filter: none !important;
   object-fit: cover !important;
 }
