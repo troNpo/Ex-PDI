@@ -607,7 +607,7 @@ const settingsConfig = [
     ]
   },
     {
-    "tab": "tools",
+    "tab": "settings",
     "title": "Ajustes del Visor y Descargas",
     "items": [
       { 
