@@ -569,7 +569,7 @@ function initCategoryEvents() {
 
 const settingsConfig = [
   {
-    "tab": "settings",
+    "tab": "category-settings",
     "title": "Opciones de Búsqueda de Categorías",
     "items": [
       { 
@@ -591,22 +591,21 @@ const settingsConfig = [
         "options": [
           { "label": "OpenStreetMap", "value": "osm", "checked": true },
           { "label": "OpenTopoMap", "value": "topo", "checked": false },
-          { "label": "Satélite (Esri)", "value": "esri", "checked": false }
+          { "label": "Esri World Imagery", "value": "esri", "checked": false }
         ]
       },
       {
-        "title": "Capas Superpuestas (Waymarked Trails)",
+        "title": "Capas Superpuestas",
         "type": "checkbox",
         "options": [
           { "label": "Senderismo (Hiking)", "id": "layer-hiking" },
           { "label": "Ciclismo (Bicycle)", "id": "layer-bicycle" },
-          { "label": "MTB", "id": "layer-mtb" },
-          { "label": "Subir archivo GPX / KML", "id": "layer-upload" }
+          { "label": "MTB", "id": "layer-mtb" }
         ]
       }
     ]
   },
-    {
+  {
     "tab": "settings",
     "title": "Ajustes del Visor y Descargas",
     "items": [
@@ -632,6 +631,8 @@ const settingsConfig = [
     ]
   }
 ];
+
+
 
 const btnMore = document.getElementById('btn-more');
 
@@ -838,7 +839,7 @@ function renderTabContent(tabName) {
     toggleLayerBinding('layer-bicycle', 'waymarked-cycling');
     toggleLayerBinding('layer-mtb', 'waymarked-mtb');
 
-  } else if (tabName === 'settings' || tabName === 'tools') {
+  } else if (tabName === 'settings' || tabName === 'tools' || tabName === 'category-settings') {
     let html = `<div class="settings-group"><div class="settings-section-title">${tabData.title}</div>`;
     
     tabData.items.forEach(item => {
@@ -903,10 +904,9 @@ function renderTabContent(tabName) {
         });
       }
     });
-
-    
   }
 }
+
 
 
 // ==========================================
