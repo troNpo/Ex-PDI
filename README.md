@@ -11,6 +11,8 @@
 
 **Ex-PDI** es una herramienta web interactiva orientada a la búsqueda, visualización y filtrado de Puntos de Interés (POIs / PDIs) sobre mapas dinámicos.
 
+https://tronpo.github.io/Ex-PDI/
+
 > ⚠️ **Estado del proyecto:** En desarrollo 🛠️
 
 ---
