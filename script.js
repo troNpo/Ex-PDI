@@ -612,7 +612,7 @@ const settingsConfig = [
         "type": "switch", 
         "id": "setting-show-banner", 
         "checked": true,
-        "icon": "icons/function-process.svg"
+        "icon": "icons/data-report.svg"
       },
       { 
         "label": "Mantener marcadores en el visor tras nueva búsqueda", 
@@ -622,7 +622,7 @@ const settingsConfig = [
         "icon": "icons/map-marker.svg"
       },
       { 
-        "label": "Descargar PDIs visibles (GPX/JSON)", 
+        "label": "Descargar PDIs visibles (kml)", 
         "action": "download-pois",
         "icon": "icons/file-download.svg"
       }
