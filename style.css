@@ -282,31 +282,32 @@ html, body, #map {
   padding: 4px;
 }
 
-/* Forzar iconos blancos en la cabecera */
-#sheet-header img,
+/* Forzar iconos blancos en la cabecera (excluyendo el logo) */
+#sheet-header img:not(.app-logo),
 #sheet-header svg,
-.sheet-actions img,
+.sheet-actions img:not(.app-logo),
 .sheet-actions svg,
-.sheet-btn img,
+.sheet-btn img:not(.app-logo),
 .sheet-btn svg {
-  width: 26px !important;
-  height: 26px !important;
-  max-width: 20px !important;
-  max-height: 20px !important;
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
-/* Excepción para que el logo conserve sus colores originales y tenga su propio tamaño */
+
+/* Excepción limpia para que el logo conserve sus colores y tamaño a todo color */
 #sheet-header img.app-logo {
-  width: 34px !important;
-  height: 34px !important;
-  max-width: 34px !important;
-  max-height: 34px !important;
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
   filter: none !important;
-  border-radius: 50%;
-  object-type: cover;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  object-fit: cover !important;
 }
+
+
 
 
 /* Barra de pestañas superiores */
