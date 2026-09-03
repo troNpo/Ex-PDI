@@ -24,6 +24,7 @@ let searchRadiusKm = 5.0;
 let poiMarkers = [];
 window['setting-keep-checkboxes'] = false;
 window['setting-keep-markers'] = false;
+window['setting-show-banner'] = true;
 
 
 
@@ -187,7 +188,7 @@ if (btnClearMarkersHeader) {
   btnClearMarkersHeader.addEventListener('click', (e) => {
     e.stopPropagation();
     clearPoiMarkers();
-    showToast('Marcadores eliminados de la pantalla');
+    setBannerMessage('Marcadores eliminados de la pantalla');
   });
 }
 
@@ -246,6 +247,18 @@ if (searchToggle) {
     }
   });
 }
+function setBannerMessage(message) {
+  const bannerEl = document.getElementById('map-feedback-banner');
+  if (!bannerEl) return;
+  bannerEl.setAttribute('data-status', message);
+  const msgEl = document.getElementById('banner-status-msg');
+  if (msgEl) {
+    msgEl.textContent = message;
+  } else {
+    updateSearchFeedbackUI(message);
+  }
+}
+
 
 let timeout = null;
 if (searchInput) {
@@ -417,7 +430,7 @@ async function loadCategories() {
 
   } catch (error) {
     console.error('Error al cargar las categorías:', error);
-    showToast('Error al cargar categories.json');
+    setBannerMessage('Error al cargar categories.json');
   }
 }
 
@@ -444,37 +457,53 @@ function getMapScaleText() {
   }
 }
 
-function updateSearchFeedbackUI() {
+function updateSearchFeedbackUI(customMessage = null) {
+  const bannerEl = document.getElementById('map-feedback-banner');
+  if (!bannerEl) return;
+
+  bannerEl.style.display = window['setting-show-banner'] !== false ? 'block' : 'none';
+  
+  // Estilos mejorados para mayor anchura y presencia visual
+  bannerEl.style.cssText = `
+    position: absolute; top: 10px; left: 10px; z-index: 1000;
+    background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(6px);
+    color: #fff; padding: 10px 14px; border-radius: 8px;
+    font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    min-width: 240px; max-width: 320px; border-left: 4px solid #e74c3c;
+    pointer-events: none; transition: all 0.3s ease;
+  `;
+
   const checkboxes = document.querySelectorAll('.poi-categories .subcategory-list input[type="checkbox"]:checked');
   const count = checkboxes.length;
-  
   const params = getDynamicSearchParameters(count === 0 ? 1 : count);
   
   searchRadiusKm = params.radius;
   updateSearchAreaPolygon(); 
 
-  const bannerEl = document.getElementById('map-feedback-banner');
-  if (!bannerEl) return;
-
   const currentScaleText = getMapScaleText();
+  const statusText = customMessage || bannerEl.getAttribute('data-status') || 'Listo para buscar';
 
   bannerEl.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 11px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 6px;">
       <span style="color: #e74c3c; font-weight: bold;">Radio: <b style="color: #fff;">${params.radius} km</b></span>
       <span style="color: #aaa;">Escala: <span id="dynamic-scale-label" style="color: #fff; font-weight: bold;">${currentScaleText}</span></span>
     </div>
-    <div style="font-size: 10px; color: #bbb; margin-top: 2px;">
-      Modo: <b style="color: #fff;">${params.mode}</b> (${params.limit} máx.)
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #bbb; margin-bottom: 4px;">
+      <span>Modo: <b style="color: #fff;">${params.mode}</b> (${params.limit} máx.)</span>
+    </div>
+    <div id="banner-status-msg" style="font-size: 11px; color: #f1c40f; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+      ${statusText}
     </div>
   `;
+  bannerEl.setAttribute('data-status', statusText);
 }
-
 map.on('zoom', () => {
   const scaleLabel = document.getElementById('dynamic-scale-label');
   if (scaleLabel) {
     scaleLabel.textContent = getMapScaleText();
   }
 });
+
 
 function initCategoryEvents() {
   const expandToggle = document.getElementById('expand-nodes-toggle');
@@ -578,10 +607,17 @@ const settingsConfig = [
       }
     ]
   },
-  {
+    {
     "tab": "tools",
     "title": "Ajustes del Visor y Descargas",
     "items": [
+      { 
+        "label": "Mostrar banner informativo del mapa", 
+        "type": "switch", 
+        "id": "setting-show-banner", 
+        "checked": true,
+        "icon": "icons/function-process.svg"
+      },
       { 
         "label": "Mantener marcadores en el visor tras nueva búsqueda", 
         "type": "switch", 
@@ -590,7 +626,7 @@ const settingsConfig = [
         "icon": "icons/map-marker.svg"
       },
       { 
-        "label": "Descargar POIs visibles (GPX/JSON)", 
+        "label": "Descargar PDIs visibles (GPX/JSON)", 
         "action": "download-pois",
         "icon": "icons/file-download.svg"
       }
@@ -852,16 +888,24 @@ function renderTabContent(tabName) {
       }
       input:checked + span[class^="slider-"]:before { transform: translateX(20px); }
     `;
-
-    ['setting-keep-checkboxes', 'setting-keep-markers'].forEach(id => {
+    ['setting-keep-checkboxes', 'setting-keep-markers', 'setting-show-banner'].forEach(id => {
       const sw = document.getElementById(id);
       if (sw) {
-        sw.checked = window[id] !== undefined ? window[id] : false;
+        sw.checked = window[id] !== undefined ? window[id] : (id === 'setting-show-banner' ? true : false);
         sw.addEventListener('change', (e) => {
           window[id] = e.target.checked;
+          
+          if (id === 'setting-show-banner') {
+            const bannerEl = document.getElementById('map-feedback-banner');
+            if (bannerEl) {
+              bannerEl.style.display = e.target.checked ? 'block' : 'none';
+            }
+          }
         });
       }
     });
+
+    
   }
 }
 
@@ -911,14 +955,14 @@ if (btnCheck) {
     const totalSelections = searchTerms.length;
 
     if (totalSelections === 0) {
-      showToast('Selecciona al menos una subcategoría');
+      setBannerMessage('Selecciona al menos una subcategoría');
       return;
     }
 
     const { radius, limit } = getDynamicSearchParameters(totalSelections);
 
     searchRadiusKm = radius;
-    showToast(`Buscando ${totalSelections} concepto(s) en ${searchRadiusKm} km...`);
+    setBannerMessage(`Buscando ${totalSelections} concepto(s) en ${searchRadiusKm} km...`);
     updateSearchAreaPolygon();
     updateSearchFeedbackUI();
 
@@ -972,7 +1016,7 @@ if (btnCancel) {
       chk.indeterminate = false;
     });
     updateSearchFeedbackUI();
-    showToast('Filtros reiniciados');
+    setBannerMessage('Filtros reiniciados');
   });
 }
 
@@ -1008,18 +1052,18 @@ function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
       const flatResults = results.flat();
       const uniquePlaces = Array.from(new Map(flatResults.map(p => [p.place_id, p])).values());
       
-      showToast(`Encontrados: ${uniquePlaces.length} PDI`);
+      setBannerMessage(`Encontrados: ${uniquePlaces.length} PDI`);
       renderPoiMarkers(uniquePlaces);
     })
     .catch(err => {
       console.error('Error general procesando peticiones:', err);
-      showToast('Error al consultar la red');
+      setBannerMessage('Error al consultar la red');
     });
 }
 
 function renderPoiMarkers(places) {
   if (places.length === 0) {
-    showToast('No hay resultados en esta vista');
+    setBannerMessage('No hay resultados en esta vista');
     updateHeaderTrashVisibility();
     return;
   }
