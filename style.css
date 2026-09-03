@@ -289,13 +289,25 @@ html, body, #map {
 .sheet-actions svg,
 .sheet-btn img,
 .sheet-btn svg {
-  width: 20px !important;
-  height: 20px !important;
+  width: 26px !important;
+  height: 26px !important;
   max-width: 20px !important;
   max-height: 20px !important;
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
+/* Excepción para que el logo conserve sus colores originales y tenga su propio tamaño */
+#sheet-header img.app-logo {
+  width: 34px !important;
+  height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  filter: none !important;
+  border-radius: 50%;
+  object-type: cover;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 
 /* Barra de pestañas superiores */
 .tabs-bar {

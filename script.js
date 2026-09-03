@@ -463,13 +463,13 @@ function updateSearchFeedbackUI(customMessage = null) {
 
   bannerEl.style.display = window['setting-show-banner'] !== false ? 'block' : 'none';
   
-  // Estilos mejorados para mayor anchura y presencia visual
+  // Banner ensanchado para alojar cómodamente los nuevos textos descriptivos
   bannerEl.style.cssText = `
     position: absolute; top: 10px; left: 10px; z-index: 1000;
     background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(6px);
     color: #fff; padding: 10px 14px; border-radius: 8px;
     font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    min-width: 240px; max-width: 320px; border-left: 4px solid #e74c3c;
+    min-width: 270px; max-width: 360px; border-left: 4px solid #e74c3c;
     pointer-events: none; transition: all 0.3s ease;
   `;
 
@@ -482,14 +482,15 @@ function updateSearchFeedbackUI(customMessage = null) {
 
   const currentScaleText = getMapScaleText();
   const statusText = customMessage || bannerEl.getAttribute('data-status') || 'Listo para buscar';
+  const criteriaCount = count === 0 ? 1 : count;
 
   bannerEl.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 6px;">
       <span style="color: #e74c3c; font-weight: bold;">Radio: <b style="color: #fff;">${params.radius} km</b></span>
-      <span style="color: #aaa;">Escala: <span id="dynamic-scale-label" style="color: #fff; font-weight: bold;">${currentScaleText}</span></span>
+      <span style="color: #aaa;">Vista: <span id="dynamic-scale-label" style="color: #fff; font-weight: bold;">${currentScaleText}</span></span>
     </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #bbb; margin-bottom: 4px;">
-      <span>Modo: <b style="color: #fff;">${params.mode}</b> (${params.limit} máx.)</span>
+    <div style="font-size: 10px; color: #bbb; margin-bottom: 6px;">
+      Filtro: <b style="color: #fff;">${criteriaCount} criterio(s)</b> (Máx. ${params.limit} resultados/término)
     </div>
     <div id="banner-status-msg" style="font-size: 11px; color: #f1c40f; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
       ${statusText}
@@ -497,12 +498,7 @@ function updateSearchFeedbackUI(customMessage = null) {
   `;
   bannerEl.setAttribute('data-status', statusText);
 }
-map.on('zoom', () => {
-  const scaleLabel = document.getElementById('dynamic-scale-label');
-  if (scaleLabel) {
-    scaleLabel.textContent = getMapScaleText();
-  }
-});
+
 
 
 function initCategoryEvents() {
