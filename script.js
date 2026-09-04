@@ -21,12 +21,18 @@ const baseMaps = {
 };
 
 let searchRadiusKm = 5.0;
-let poiMarkers = [];
+
+// ==========================================
+// GESTIÓN DE CAPAS Y RESULTADOS DE PDI
+// ==========================================
+let poiLayers = [];          
+let activeLayerId = null;    
+let currentPoiResults = [];  
+let poiMarkers = [];         
+
 window['setting-keep-checkboxes'] = false;
 window['setting-keep-markers'] = false;
 window['setting-show-banner'] = true;
-
-
 
 // ==========================================
 // INICIALIZACIÓN DE MAPLIBRE Y CONTROLES
@@ -92,14 +98,19 @@ const map = new maplibregl.Map({
 });
 
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
-map.addControl(
-  new maplibregl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true },
-    trackUserLocation: true,
-    showUserHeading: true
-  }),
-  'top-right'
-);
+
+const geolocateControl = new maplibregl.GeolocateControl({
+  positionOptions: { enableHighAccuracy: true },
+  trackUserLocation: true,
+  showUserHeading: true
+});
+
+map.addControl(geolocateControl, 'top-right');
+
+let userGpsCoords = null;
+geolocateControl.on('geolocate', (e) => {
+  userGpsCoords = { lat: e.coords.latitude, lon: e.coords.longitude };
+});
 
 
 // ==========================================
@@ -172,17 +183,48 @@ map.on('move', () => {
   updateSearchFeedbackUI();
 });
 
-
 const headerMain = document.getElementById('header-main-actions');
 const headerTabs = document.getElementById('header-tabs-actions');
 const btnClearMarkersHeader = document.getElementById('btn-clear-markers-header');
 
-function updateHeaderTrashVisibility() {
-  if (!btnClearMarkersHeader) return;
-  if (poiMarkers.length > 0) {
-    btnClearMarkersHeader.classList.remove('hidden');
+function updateHeaderListVisibility() {
+  let btnListHeader = document.getElementById('btn-list-header');
+  
+  if (!btnListHeader) {
+    const trashBtn = document.getElementById('btn-clear-markers-header');
+    btnListHeader = document.createElement('button');
+    btnListHeader.id = 'btn-list-header';
+    btnListHeader.className = 'sheet-btn';
+    btnListHeader.setAttribute('aria-label', 'Ver listado de PDI');
+    btnListHeader.setAttribute('title', 'Ver listado de PDI');
+    btnListHeader.style.position = 'relative';
+    
+    if (trashBtn && trashBtn.parentNode) {
+      trashBtn.parentNode.insertBefore(btnListHeader, trashBtn);
+    } else {
+      const headerMain = document.getElementById('header-main-actions');
+      if (headerMain) headerMain.appendChild(btnListHeader);
+    }
+  }
+
+  if (currentPoiResults.length > 0) {
+    btnListHeader.classList.remove('hidden');
+    btnListHeader.innerHTML = `
+      <img src="icons/list.svg" alt="Listado" width="20" height="20">
+      <span style="position: absolute; top: -4px; right: -4px; background: #e74c3c; color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 10px; font-weight: bold;">${currentPoiResults.length}</span>
+    `;
   } else {
-    btnClearMarkersHeader.classList.add('hidden');
+    btnListHeader.classList.add('hidden');
+  }
+}
+
+function updateHeaderTrashVisibility() {
+  if (btnClearMarkersHeader) {
+    if (currentPoiResults.length > 0) {
+      btnClearMarkersHeader.classList.remove('hidden');
+    } else {
+      btnClearMarkersHeader.classList.add('hidden');
+    }
   }
 }
 
@@ -207,7 +249,6 @@ function updateMapPadding() {
   setTimeout(updateSearchAreaPolygon, 50);
   setTimeout(updateSearchAreaPolygon, 320);
 }
-
 
 // ==========================================
 // UTILIDADES VISUALES Y BUSCADOR DE LUGARES
@@ -249,6 +290,7 @@ if (searchToggle) {
     }
   });
 }
+
 function setBannerMessage(message) {
   const bannerEl = document.getElementById('map-feedback-banner');
   if (!bannerEl) return;
@@ -260,7 +302,6 @@ function setBannerMessage(message) {
     updateSearchFeedbackUI(message);
   }
 }
-
 
 let timeout = null;
 if (searchInput) {
@@ -301,6 +342,15 @@ if (searchInput) {
         });
     }, 400);
   });
+}
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 
@@ -376,7 +426,6 @@ window.addEventListener('touchend', () => {
 });
 
 window.addEventListener('resize', initSheetPosition);
-
 
 // ==========================================
 // CARGA Y GESTIÓN DE CATEGORÍAS (UI)
@@ -632,10 +681,7 @@ const settingsConfig = [
   }
 ];
 
-
-
 const btnMore = document.getElementById('btn-more');
-
 let savedCheckedNodeIds = [];
 
 function captureCurrentSelections() {
@@ -706,7 +752,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       headerTabs.classList.add('hidden');
       headerMain.classList.remove('hidden');
       
-      // Restauramos la estructura original del panel principal antes de cargar y marcar
       if (initialSheetHTML) {
         sheetContent.innerHTML = initialSheetHTML;
       }
@@ -907,7 +952,211 @@ function renderTabContent(tabName) {
   }
 }
 
+document.addEventListener('click', (e) => {
+  const listHeaderBtn = e.target.closest('#btn-list-header');
+  if (!listHeaderBtn) return;
+  
+  e.stopPropagation();
+  renderPoiListPanel();
 
+  const { SNAP_FULL } = getSnapPoints();
+  sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+  sheet.style.transform = `translateY(${SNAP_FULL}px)`;
+  updateMapPadding();
+});
+
+function renderPoiListPanel() {
+  if (!sheetContent) return;
+
+  if (headerMain) headerMain.classList.add('hidden');
+  if (headerTabs) headerTabs.classList.add('hidden');
+
+  let headerListActions = document.getElementById('header-list-actions');
+  if (!headerListActions) {
+    headerListActions = document.createElement('div');
+    headerListActions.id = 'header-list-actions';
+    headerListActions.className = 'sheet-header-actions';
+    headerListActions.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 15px;';
+    headerListActions.innerHTML = `
+      <button id="btn-back-from-list" class="sheet-btn" aria-label="Volver" title="Volver al panel principal">
+        <img src="icons/back.svg" alt="Volver" width="22" height="22">
+      </button>
+      <span id="list-header-title" style="color: #fff; font-size: 13px; font-weight: bold;">Listado de PDI</span>
+      <button id="btn-delete-active-layer" class="sheet-btn" aria-label="Eliminar capa" title="Eliminar capa actual">
+        <img src="icons/trash.svg" alt="Eliminar" width="20" height="20">
+      </button>
+    `;
+    if (headerMain && headerMain.parentNode) {
+      headerMain.parentNode.insertBefore(headerListActions, headerMain);
+    }
+  } else {
+    headerListActions.classList.remove('hidden');
+  }
+
+  const btnBack = document.getElementById('btn-back-from-list');
+  if (btnBack) {
+    btnBack.onclick = (e) => {
+      e.stopPropagation();
+      headerListActions.classList.add('hidden');
+      if (headerMain) headerMain.classList.remove('hidden');
+
+      if (initialSheetHTML) {
+        sheetContent.innerHTML = initialSheetHTML;
+      }
+      loadCategories().then(() => {
+        if (typeof restoreSelections === 'function') restoreSelections();
+      });
+      updateMapPadding();
+    };
+  }
+
+  const btnDeleteLayer = document.getElementById('btn-delete-active-layer');
+  if (btnDeleteLayer) {
+    btnDeleteLayer.onclick = (e) => {
+      e.stopPropagation();
+      if (!activeLayerId) return;
+
+      const idx = poiLayers.findIndex(l => l.id === activeLayerId);
+      if (idx !== -1) {
+        poiLayers[idx].markers.forEach(m => m.remove());
+        poiLayers.splice(idx, 1);
+      }
+
+      updateGlobalResultsFromLayers();
+      updateHeaderTrashVisibility();
+      updateHeaderListVisibility();
+
+      if (poiLayers.length > 0) {
+        activeLayerId = poiLayers[poiLayers.length - 1].id;
+        renderPoiListPanel();
+      } else {
+        if (btnBack) btnBack.click();
+      }
+    };
+  }
+
+  const activeLayer = poiLayers.find(l => l.id === activeLayerId) || poiLayers[0];
+  const placesToShow = activeLayer ? activeLayer.pois : currentPoiResults;
+
+  let html = `
+    <div class="settings-group" style="padding: 10px 15px; margin: 0; display: flex; flex-direction: column; height: calc(50vh - 58px); box-sizing: border-box;">
+      <div class="settings-section-title" style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 8px;">
+        <span>Capa: ${activeLayer ? activeLayer.name : 'General'} (${placesToShow.length})</span>
+        <span style="font-size: 11px; color: #aaa; font-weight: normal;">Pulsa para centrar</span>
+      </div>
+      <div style="flex: 1; overflow-y: auto; padding-right: 4px; min-height: 0;">
+  `;
+  placesToShow.forEach((place, index) => {
+    const parts = place.display_name.split(',');
+    const title = parts[0] || 'Lugar sin nombre';
+    const subtitle = parts.slice(1, 3).join(',') || 'Ubicación en OpenStreetMap';
+    const tagLabel = place.searchTerm ? place.searchTerm : (place.type || place.class || 'PDI');
+
+    // Cálculo dinámico de la distancia si el GPS está activo
+    let distanceHTML = '';
+    if (typeof userGpsCoords !== 'undefined' && userGpsCoords) {
+      const distKm = calculateDistance(userGpsCoords.lat, userGpsCoords.lon, parseFloat(place.lat), parseFloat(place.lon));
+      const distFormatted = distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`;
+      distanceHTML = `<div style="font-size: 11px; color: #f1c40f; font-weight: bold; margin-top: 2px;">📍 A ${distFormatted}</div>`;
+    }
+
+    html += `
+      <div class="poi-list-item" data-index="${index}" style="padding: 10px 12px; margin-bottom: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${place.color || '#e74c3c'}; transition: background 0.2s;">
+        <div style="flex: 1; padding-right: 8px; overflow: hidden;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <span style="font-size: 9px; background: rgba(231, 76, 60, 0.2); color: #e74c3c; padding: 1px 5px; border-radius: 4px; font-weight: bold; text-transform: uppercase;">${tagLabel}</span>
+          </div>
+          <div style="font-weight: 600; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
+          <div style="font-size: 11px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">${subtitle}</div>
+          ${distanceHTML}
+        </div>
+        <div style="font-size: 12px; color: #e74c3c; font-weight: bold; flex-shrink: 0;">→</div>
+      </div>
+    `;
+  });
+
+  html += `</div></div>`;
+  sheetContent.innerHTML = html;
+
+  document.querySelectorAll('.poi-list-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = item.getAttribute('data-index');
+      const place = placesToShow[idx];
+      if (!place) return;
+
+      const lon = parseFloat(place.lon);
+      const lat = parseFloat(place.lat);
+
+
+ 
+      // Posicionamos el PDI al 25% de la altura de la pantalla (zona superior visible)
+            
+      const targetY = window.innerHeight * 0.25;
+      const offsetY = targetY - (window.innerHeight / 2);
+
+      map.flyTo({
+        center: [lon, lat],
+        zoom: 17,
+        essential: true,
+        offset: [0, offsetY]
+      });
+
+
+      const activeLayer = poiLayers.find(l => l.id === activeLayerId) || poiLayers[0];
+      if (activeLayer && activeLayer.markers && activeLayer.markers[idx]) {
+        const el = activeLayer.markers[idx].getElement();
+        const inner = el.querySelector('svg') || el.firstElementChild;
+        if (inner) {
+          inner.style.transition = 'transform 0.2s';
+          inner.style.transform = 'scale(1.4)';
+          setTimeout(() => {
+            inner.style.transform = 'scale(1)';
+          }, 2000);
+        }
+      }
+    });
+  });
+
+
+
+}
+
+function clearPoiMarkers() {
+  poiLayers.forEach(layer => {
+    if (layer.markers) {
+      layer.markers.forEach(marker => marker.remove());
+    }
+  });
+  
+  poiLayers = [];
+  activeLayerId = null;
+  currentPoiResults = []; 
+  poiMarkers = [];
+  
+  if (sheetContent) {
+    if (initialSheetHTML) {
+      sheetContent.innerHTML = initialSheetHTML;
+      if (headerTabs && !headerTabs.classList.contains('hidden')) {
+        headerTabs.classList.add('hidden');
+        headerMain.classList.remove('hidden');
+      }
+      loadCategories().then(() => {
+        if (typeof restoreSelections === 'function') restoreSelections();
+      });
+    } else {
+      sheetContent.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; font-size: 13px;">No hay PDI seleccionados</div>`;
+    }
+  }
+
+  updateHeaderTrashVisibility();
+  updateHeaderListVisibility();
+  updateMapPadding();
+
+  setBannerMessage('Todas las capas han sido eliminadas');
+  setTimeout(() => {
+    updateSearchFeedbackUI();
+  }, 2000);
+}
 
 // ==========================================
 // GESTIÓN DE BÚSQUEDA Y MARCADORES
@@ -1006,7 +1255,6 @@ if (btnCheck) {
   });
 }
 
-
 if (btnCancel) {
   btnCancel.addEventListener('click', () => {
     savedCheckedNodeIds = [];
@@ -1021,12 +1269,10 @@ if (btnCancel) {
 
 function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
   const keepMarkers = window['setting-keep-markers'] === true;
-  if (!keepMarkers) {
-    clearPoiMarkers();
-  }
-
   const maxConcurrent = 6;
   const uniqueTerms = Array.from(new Set(searchTerms.map(s => s.term))).slice(0, maxConcurrent);
+
+  const layerName = uniqueTerms.slice(0, 3).join(', ') + (uniqueTerms.length > 3 ? '...' : '');
 
   const promises = uniqueTerms.map((term) => {
     const originalItem = searchTerms.find(s => s.term === term);
@@ -1038,7 +1284,8 @@ function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
     .then(res => res.json())
     .then(data => data.map(place => ({ 
       ...place, 
-      color: getNodeColor(originalItem.catIndex, originalItem.nodeIndex) 
+      color: getNodeColor(originalItem.catIndex, originalItem.nodeIndex),
+      searchTerm: term 
     })))
     .catch(err => {
       console.error("Error en fetch de Nominatim:", err);
@@ -1051,8 +1298,50 @@ function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
       const flatResults = results.flat();
       const uniquePlaces = Array.from(new Map(flatResults.map(p => [p.place_id, p])).values());
       
-      setBannerMessage(`Encontrados: ${uniquePlaces.length} PDI`);
-      renderPoiMarkers(uniquePlaces);
+      if (uniquePlaces.length === 0) {
+        setBannerMessage('No hay resultados en esta vista');
+        return;
+      }
+
+      if (keepMarkers && poiLayers.length > 0 && activeLayerId) {
+        const activeLayer = poiLayers.find(l => l.id === activeLayerId) || poiLayers[poiLayers.length - 1];
+        
+        const existingIds = new Set(activeLayer.pois.map(p => p.place_id));
+        const newPlaces = uniquePlaces.filter(p => !existingIds.has(p.place_id));
+        
+        activeLayer.pois = [...activeLayer.pois, ...newPlaces];
+        
+        const newMarkers = renderMarkersForPlaces(newPlaces, activeLayer);
+        activeLayer.markers = [...activeLayer.markers, ...newMarkers];
+        
+        setBannerMessage(`Capa "${activeLayer.name}" actualizada (+${newPlaces.length} PDI)`);
+      } else {
+        if (!keepMarkers) {
+          poiLayers.forEach(l => l.markers.forEach(m => m.remove()));
+          poiLayers = [];
+        }
+
+        const newLayer = {
+          id: 'layer_' + Date.now(),
+          name: layerName || 'Capa de PDI',
+          pois: uniquePlaces,
+          markers: [],
+          visible: true
+        };
+
+        const createdMarkers = renderMarkersForPlaces(uniquePlaces, newLayer);
+        newLayer.markers = createdMarkers;
+
+        poiLayers.push(newLayer);
+        activeLayerId = newLayer.id;
+
+        setBannerMessage(`Nueva capa creada: ${uniquePlaces.length} PDI`);
+      }
+
+      updateGlobalResultsFromLayers();
+      updateHeaderTrashVisibility();
+      updateHeaderListVisibility();
+      renderPoiListPanel();
     })
     .catch(err => {
       console.error('Error general procesando peticiones:', err);
@@ -1060,33 +1349,54 @@ function fetchPOIsOptimized(searchTerms, viewbox, dynamicLimit = 15) {
     });
 }
 
-function renderPoiMarkers(places) {
-  if (places.length === 0) {
-    setBannerMessage('No hay resultados en esta vista');
-    updateHeaderTrashVisibility();
-    return;
-  }
+function renderMarkersForPlaces(places, layer) {
+  const createdMarkers = [];
 
-  places.forEach(place => {
+  places.forEach((place, index) => {
     const lat = parseFloat(place.lat);
     const lon = parseFloat(place.lon);
     const markerColor = place.color || '#e74c3c';
 
     const marker = new maplibregl.Marker({ color: markerColor })
       .setLngLat([lon, lat])
-      .setPopup(new maplibregl.Popup().setText(place.display_name))
       .addTo(map);
 
+    marker.getElement().addEventListener('click', (e) => {
+      e.stopPropagation();
+      activeLayerId = layer.id; 
+      renderPoiListPanel();
+      
+      const { SNAP_FULL } = getSnapPoints();
+      sheet.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+      sheet.style.transform = `translateY(${SNAP_FULL}px)`;
+      updateMapPadding();
+
+      setTimeout(() => {
+        const listItem = sheetContent.querySelector(`.poi-list-item[data-index="${index}"]`);
+        if (listItem) {
+          listItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          listItem.style.background = 'rgba(231, 76, 60, 0.3)';
+          setTimeout(() => {
+            listItem.style.background = 'rgba(255,255,255,0.05)';
+          }, 1500);
+        }
+      }, 150);
+    });
+
+    createdMarkers.push(marker);
     poiMarkers.push(marker);
   });
 
-  updateHeaderTrashVisibility();
+  return createdMarkers;
 }
 
-function clearPoiMarkers() {
-  poiMarkers.forEach(marker => marker.remove());
-  poiMarkers = [];
-  updateHeaderTrashVisibility();
+function updateGlobalResultsFromLayers() {
+  currentPoiResults = [];
+  poiLayers.forEach(layer => {
+    if (layer.visible) {
+      currentPoiResults = [...currentPoiResults, ...layer.pois];
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1095,6 +1405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   loadCategories();
 });
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/Ex-PDI/sw.js')
@@ -1102,4 +1413,3 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.log('Error al registrar el Service Worker:', err));
   });
 }
-

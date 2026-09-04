@@ -3,226 +3,209 @@
     "id": "accommodation",
     "name": "Alojamiento",
     "nodes": [
-      { "id": "alpine_hut", "name": "Refugio de montaña", "v": "alpine_hut", "icon": "poi_alpinehut.svg" },
-      { "id": "wilderness_hut", "name": "Refugio libre / Cabaña", "v": "wilderness_hut", "icon": "poi_chalet.svg" },
-      { "id": "camp_caravan", "name": "Camping / Caravanas", "v": "camp_site|caravan_site", "icon": "poi_camping.svg" },
-      { "id": "motel", "name": "Motel", "v": "motel", "icon": "poi_hotel.svg" },
-      { "id": "hostel", "name": "Hostal / Albergue", "v": "hostel", "icon": "poi_hostel.svg" },
-      { "id": "hotel", "name": "Hotel", "v": "hotel", "icon": "poi_hotel.svg" },
-      { "id": "guest_house_chalet", "name": "Pensión / Chalet", "v": "guest_house|chalet", "icon": "poi_chalet.svg" }
+      { "id": "alpine_hut", "name": "Refugio de montaña", "k": "tourism", "v": "alpine_hut", "icon": "poi_alpinehut.svg", "emoji": "🏔️" },
+      { "id": "wilderness_hut", "name": "Refugio libre / Cabaña", "k": "tourism", "v": "wilderness_hut", "icon": "poi_chalet.svg", "emoji": "🛖" },
+      { "id": "camp_caravan", "name": "Camping / Caravanas", "k": "tourism", "v": "camp_site|caravan_site", "icon": "poi_camping.svg", "emoji": "⛺" },
+      { "id": "motel", "name": "Motel", "k": "tourism", "v": "motel", "icon": "poi_hotel.svg", "emoji": "🚪" },
+      { "id": "hostel", "name": "Hostal / Albergue", "k": "tourism", "v": "hostel", "icon": "poi_hostel.svg", "emoji": "🛏️" },
+      { "id": "hotel", "name": "Hotel", "k": "tourism", "v": "hotel", "icon": "poi_hotel.svg", "emoji": "🏨" },
+      { "id": "guest_house_chalet", "name": "Pensión / Chalet", "k": "tourism", "v": "guest_house|chalet", "icon": "poi_chalet.svg", "emoji": "🏡" }
     ]
   },
   {
     "id": "financial_post_services",
     "name": "Servicios Financieros y Correos",
     "nodes": [
-      { "id": "bank", "name": "Banco", "v": "bank", "icon": "poi_bank.svg" },
-      { "id": "exchange", "name": "Casa de cambio", "v": "bureau_de_change", "icon": "poi_bank.svg" },
-      { "id": "atm", "name": "Cajero automático", "v": "atm", "icon": "poi_atm.svg" },
-      { "id": "parcel_locker", "name": "Taquilla de paquetes", "v": "parcel_locker", "icon": "poi_post_office.svg" },
-      { "id": "post_office", "name": "Oficina de correos", "v": "post_office", "icon": "poi_post_office.svg" },
-      { "id": "post_box", "name": "Buzón de correos", "v": "post_box", "icon": "poi_post_box.svg" }
+      { "id": "bank", "name": "Banco", "k": "amenity", "v": "bank", "icon": "poi_bank.svg", "emoji": "🏦" },
+      { "id": "exchange", "name": "Casa de cambio", "k": "amenity", "v": "bureau_de_change", "icon": "poi_bank.svg", "emoji": "💱" },
+      { "id": "atm", "name": "Cajero automático", "k": "amenity", "v": "atm", "icon": "poi_atm.svg", "emoji": "🏧" },
+      { "id": "parcel_locker", "name": "Taquilla de paquetes", "k": "amenity", "v": "parcel_locker", "icon": "poi_post_office.svg", "emoji": "📦" },
+      { "id": "post_office", "name": "Oficina de correos", "k": "amenity", "v": "post_office", "icon": "poi_post_office.svg", "emoji": "🏣" },
+      { "id": "post_box", "name": "Buzón de correos", "k": "amenity", "v": "post_box", "icon": "poi_post_box.svg", "emoji": "📮" }
     ]
   },
   {
     "id": "culture_tourism",
     "name": "Cultura y Turismo",
     "nodes": [
-      { "id": "info", "name": "Oficina de información", "v": "office", "icon": "poi_information.svg" },
-      { "id": "info_board", "name": "Panel informativo", "v": "board", "icon": "poi_information.svg" },
-      { "id": "info_board_map", "name": "Mapa informativo", "v": "map", "icon": "poi_information.svg" },
-      { "id": "museum", "name": "Museo", "v": "museum", "icon": "poi_museum.svg" },
-      { "id": "gallery", "name": "Galería de arte", "v": "gallery", "icon": "poi_museum.svg" },
-      { "id": "cinema", "name": "Cine", "v": "cinema", "icon": "poi_cinema.svg" },
-      { "id": "theatre", "name": "Teatro", "v": "theatre", "icon": "poi_theatre.svg" },
-      { "id": "castle", "name": "Castillo", "v": "castle", "icon": "poi_castle.svg" },
-      { "id": "sculpture", "name": "Estatua / Escultura", "v": "statue|sculpture", "icon": "poi_monument.svg" },
-      { "id": "memorial", "name": "Memorial", "v": "memorial", "icon": "poi_memorial.svg" },
-      { "id": "monument", "name": "Monumento", "v": "monument", "icon": "poi_monument.svg" },
-      { "id": "ruin", "name": "Ruinas", "v": "ruins", "icon": "poi_ruin.svg" },
-      { "id": "shipwreck", "name": "Naufragio", "v": "wreck", "icon": "poi_archaeological.svg" },
-      { "id": "attraction", "name": "Atracción turística", "v": "attraction|artwork", "icon": "poi_attraction.svg" },
-      { "id": "zoo", "name": "Zoo", "v": "zoo", "icon": "poi_zoo.svg" },
-      { "id": "watermill", "name": "Molino de agua", "v": "watermill", "icon": "poi_windmill.svg" },
-      { "id": "water_tower", "name": "Torre de agua", "v": "water_tower", "icon": "poi_unknown.svg" },
-      { "id": "bridge", "name": "Puente histórico", "v": "bridge|covered", "icon": "poi_unknown.svg" },
-      { "id": "aqueduct", "name": "Acueducto", "v": "aqueduct", "icon": "poi_unknown.svg" },
-      { "id": "windmill", "name": "Molino de viento", "v": "windmill", "icon": "poi_windmill.svg" },
-      { "id": "lighthouse", "name": "Faro", "v": "lighthouse", "icon": "poi_lighthouse.svg" },
-      { "id": "fountain", "name": "Fuente ornamental", "v": "fountain", "icon": "poi_fountain.svg" },
-      { "id": "toilets", "name": "Aseos públicos", "v": "toilets", "icon": "poi_toilets.svg" }
+      { "id": "info", "name": "Oficina de información", "k": "information", "v": "office", "icon": "poi_information.svg", "emoji": "ℹ️" },
+      { "id": "info_board", "name": "Panel informativo", "k": "information", "v": "board", "icon": "poi_information.svg", "emoji": "🪧" },
+      { "id": "info_board_map", "name": "Mapa informativo", "k": "information", "v": "map", "icon": "poi_information.svg", "emoji": "🗺️" },
+      { "id": "museum", "name": "Museo", "k": "tourism", "v": "museum", "icon": "poi_museum.svg", "emoji": "🏛️" },
+      { "id": "gallery", "name": "Galería de arte", "k": "tourism", "v": "gallery", "icon": "poi_museum.svg", "emoji": "🖼️" },
+      { "id": "cinema", "name": "Cine", "k": "amenity", "v": "cinema", "icon": "poi_cinema.svg", "emoji": "🎦" },
+      { "id": "theatre", "name": "Teatro", "k": "amenity", "v": "theatre", "icon": "poi_theatre.svg", "emoji": "🎭" },
+      { "id": "castle", "name": "Castillo", "k": "historic", "v": "castle", "icon": "poi_castle.svg", "emoji": "🏰" },
+      { "id": "sculpture", "name": "Estatua / Escultura", "k": "memorial|artwork_type", "v": "statue|sculpture", "icon": "poi_monument.svg", "emoji": "🗿" },
+      { "id": "memorial", "name": "Memorial", "k": "historic", "v": "memorial", "icon": "poi_memorial.svg", "emoji": "🕊️" },
+      { "id": "monument", "name": "Monumento", "k": "historic", "v": "monument", "icon": "poi_monument.svg", "emoji": "🗽" },
+      { "id": "ruin", "name": "Ruinas", "k": "historic", "v": "ruins", "icon": "poi_ruin.svg", "emoji": "🏛️" },
+      { "id": "shipwreck", "name": "Naufragio", "k": "historic", "v": "wreck", "icon": "poi_archaeological.svg", "emoji": "⚓" },
+      { "id": "attraction", "name": "Atracción turística", "k": "tourism", "v": "attraction|artwork", "icon": "poi_attraction.svg", "emoji": "🎡" },
+      { "id": "zoo", "name": "Zoo", "k": "tourism", "v": "zoo", "icon": "poi_zoo.svg", "emoji": "🦁" },
+      { "id": "watermill", "name": "Molino de agua", "k": "man_made", "v": "watermill", "icon": "poi_windmill.svg", "emoji": "⚙️" },
+      { "id": "water_tower", "name": "Torre de agua", "k": "man_made|building", "v": "water_tower", "icon": "poi_unknown.svg", "emoji": "🛢️" },
+      { "id": "bridge", "name": "Puente histórico", "k": "historic|bridge|building|man_made", "v": "bridge|covered", "icon": "poi_unknown.svg", "emoji": "🌉" },
+      { "id": "aqueduct", "name": "Acueducto", "k": "historic", "v": "aqueduct", "icon": "poi_unknown.svg", "emoji": "🏛️" },
+      { "id": "windmill", "name": "Molino de viento", "k": "man_made", "v": "windmill", "icon": "poi_windmill.svg", "emoji": "🌬️" },
+      { "id": "lighthouse", "name": "Faro", "k": "man_made", "v": "lighthouse", "icon": "poi_lighthouse.svg", "emoji": "lighthouse" },
+      { "id": "fountain", "name": "Fuente ornamental", "k": "amenity", "v": "fountain", "icon": "poi_fountain.svg", "emoji": "⛲" },
+      { "id": "toilets", "name": "Aseos públicos", "k": "amenity", "v": "toilets", "icon": "poi_toilets.svg", "emoji": "🚻" }
     ]
   },
   {
     "id": "public_services",
     "name": "Servicios Públicos",
     "nodes": [
-      { "id": "townhall", "name": "Ayuntamiento", "v": "townhall", "icon": "poi_unknown.svg" },
-      { "id": "library", "name": "Biblioteca", "v": "library", "icon": "poi_library.svg" },
-      { "id": "kindergarten", "name": "Guardería", "v": "kindergarten", "icon": "poi_nursery.svg" },
-      { "id": "education", "name": "Escuela / Universidad", "v": "college|school|university", "icon": "poi_school.svg" },
-      { "id": "embassy", "name": "Embajada", "v": "embassy", "icon": "poi_embassy.svg" },
-      { "id": "grave_yard", "name": "Cementerio", "v": "cemetery|grave_yard", "icon": "poi_unknown.svg" }
+      { "id": "townhall", "name": "Ayuntamiento", "k": "amenity", "v": "townhall", "icon": "poi_unknown.svg", "emoji": "🏛️" },
+      { "id": "library", "name": "Biblioteca", "k": "amenity", "v": "library", "icon": "poi_library.svg", "emoji": "📚" },
+      { "id": "kindergarten", "name": "Guardería", "k": "amenity", "v": "kindergarten", "icon": "poi_nursery.svg", "emoji": "👶" },
+      { "id": "education", "name": "Escuela / Universidad", "k": "amenity", "v": "college|school|university", "icon": "poi_school.svg", "emoji": "🎓" },
+      { "id": "embassy", "name": "Embajada", "k": "amenity", "v": "embassy", "icon": "poi_embassy.svg", "emoji": "🏳️" },
+      { "id": "grave_yard", "name": "Cementerio", "k": "landuse|amenity", "v": "cemetery|grave_yard", "icon": "poi_unknown.svg", "emoji": "⚰️" }
     ]
   },
   {
     "id": "hiking_cycling",
     "name": "Senderismo y Ciclismo",
     "nodes": [
-      { "id": "bike_repair", "name": "Taller / Estación de reparación de bicis", "v": "bicycle_repair_station|yes", "icon": "poi_rental_bicycle.svg" },
-      { "id": "bicycle_parking", "name": "Aparcabicis", "v": "bicycle_parking", "icon": "poi_bicycle.svg" },
-      { "id": "charging_station_bikes", "name": "Cargador de bicis eléctricas", "v": "charging_station", "icon": "poi_charging_station.svg" },
-      { "id": "guidepost", "name": "Poste señalizador", "v": "guidepost", "icon": "poi_information.svg" },
-      { "id": "picnic_site", "name": "Área de picnic", "v": "picnic_site", "icon": "poi_picnic.svg" },
-      { "id": "fire_pit", "name": "Lugar para fogatas", "v": "firepit", "icon": "poi_unknown.svg" },
-      { "id": "shelter", "name": "Cobertizo / Cobertizo abierto", "v": "shelter", "icon": "poi_shelter.svg" },
-      { "id": "hunting_post", "name": "Puesto de caza", "v": "hunting_stand", "icon": "poi_shooting.svg" },
-      { "id": "trailhead", "name": "Inicio de sendero", "v": "trailhead", "icon": "poi_view_point.svg" },
-      { "id": "viewpoint", "name": "Mirador", "v": "viewpoint", "icon": "poi_view_point.svg" },
-      { "id": "observation_tower", "name": "Torre de observación", "v": "tower", "icon": "poi_unknown.svg" }
+      { "id": "bike_repair", "name": "Taller / Estación de reparación de bicis", "k": "amenity|service:bicycle:repair|bicycle:repair", "v": "bicycle_repair_station|yes|only|yes", "icon": "poi_rental_bicycle.svg", "emoji": "🔧" },
+      { "id": "bicycle_parking", "name": "Aparcabicis", "k": "amenity", "v": "bicycle_parking", "icon": "poi_bicycle.svg", "emoji": "🚲" },
+      { "id": "charging_station_bikes", "name": "Cargador de bicis eléctricas", "k": "amenity", "v": "charging_station", "icon": "poi_charging_station.svg", "emoji": "⚡" },
+      { "id": "guidepost", "name": "Poste señalizador", "k": "information", "v": "guidepost", "icon": "poi_information.svg", "emoji": "🧭" },
+      { "id": "picnic_site", "name": "Área de picnic", "k": "tourism", "v": "picnic_site", "icon": "poi_picnic.svg", "emoji": "🧺" },
+      { "id": "fire_pit", "name": "Lugar para fogatas", "k": "leisure", "v": "firepit", "icon": "poi_unknown.svg", "emoji": "🔥" },
+      { "id": "shelter", "name": "Cobertizo / Cobertizo abierto", "k": "amenity", "v": "shelter", "icon": "poi_shelter.svg", "emoji": "🛖" },
+      { "id": "hunting_post", "name": "Puesto de caza", "k": "amenity", "v": "hunting_stand", "icon": "poi_shooting.svg", "emoji": "🎯" },
+      { "id": "trailhead", "name": "Inicio de sendero", "k": "highway", "v": "trailhead", "icon": "poi_view_point.svg", "emoji": "🥾" },
+      { "id": "viewpoint", "name": "Mirador", "k": "tourism", "v": "viewpoint", "icon": "poi_view_point.svg", "emoji": "🔭" },
+      { "id": "observation_tower", "name": "Torre de observación", "k": "man_made", "v": "tower", "icon": "poi_unknown.svg", "emoji": "🗼" }
     ]
   },
   {
     "id": "nature",
     "name": "Naturaleza",
     "nodes": [
-      { "id": "protected_area", "name": "Parque natural / Área protegida", "v": "protected_area|nature_reserve|natural_park", "icon": "poi_attraction.svg" },
-      { "id": "rock", "name": "Roca", "v": "rock", "icon": "poi_peak.svg" },
-      { "id": "stone", "name": "Piedra destacada", "v": "stone", "icon": "poi_peak.svg" },
-      { "id": "peak", "name": "Cima / Pico", "v": "peak", "icon": "poi_peak.svg" },
-      { "id": "saddle", "name": "Collado / Portillo", "v": "saddle", "icon": "poi_mountain_pass.svg" },
-      { "id": "mountain_pass", "name": "Puerto de montaña", "v": "yes", "icon": "poi_mountain_pass.svg" },
-      { "id": "spring", "name": "Manantial", "v": "spring", "icon": "poi_drinkingtap.svg" },
-      { "id": "botanical_garden", "name": "Jardín botánico", "v": "botanical", "icon": "poi_attraction.svg" },
-      { "id": "park", "name": "Parque", "v": "park", "icon": "poi_attraction.svg" },
-      { "id": "beach", "name": "Playa", "v": "beach", "icon": "poi_swimming_outdoor.svg" },
-      { "id": "waterfall", "name": "Cascada", "v": "waterfall", "icon": "poi_weir.svg" },
-      { "id": "mine", "name": "Mina / Pozo", "v": "adit|mineshaft", "icon": "poi_cave.svg" },
-      { "id": "cave", "name": "Cueva", "v": "cave_entrance", "icon": "poi_cave.svg" },
-      { "id": "sinkhole", "name": "Sima / Dolina", "v": "sinkhole", "icon": "poi_cave.svg" },
-      { "id": "cliff", "name": "Acantilado", "v": "cliff", "icon": "poi_peak.svg" },
-      { "id": "tree", "name": "Árbol notable", "v": "tree", "icon": "poi_unknown.svg" },
-      { "id": "volcano", "name": "Volcán", "v": "volcano", "icon": "poi_volcano.svg" },
-      { "id": "geyser", "name": "Géiser", "v": "geyser", "icon": "poi_fountain.svg" },
-      { "id": "hot_spring", "name": "Termas / Fuente termal", "v": "hot_spring", "icon": "poi_fountain.svg" },
-      { "id": "glacier", "name": "Glaciar", "v": "glacier", "icon": "poi_peak.svg" }
-    ]
-  },
-  {
-    "id": "barriers",
-    "name": "Barreras y Accesos",
-    "nodes": [
-      { "id": "gate", "name": "Puerta / Cancela", "v": "gate", "icon": "poi_unknown.svg" },
-      { "id": "lift_gate", "name": "Barrera / Talanquera levantable", "v": "lift_gate", "icon": "poi_unknown.svg" },
-      { "id": "swing_gate", "name": "Puerta de pivote / Carril", "v": "swing_gate", "icon": "poi_unknown.svg" },
-      { "id": "cattle_grid", "name": "Paso canadiense (ganado)", "v": "cattle_grid", "icon": "poi_unknown.svg" },
-      { "id": "stile", "name": "Paso de estilo / Escalilla para vallas", "v": "stile", "icon": "poi_unknown.svg" },
-      { "id": "bollard", "name": "Pivote / Bolardo anti-vehículos", "v": "bollard", "icon": "poi_unknown.svg" },
-      { "id": "chicane", "name": "Chicane / Barrera anti-motos", "v": "chicane", "icon": "poi_unknown.svg" },
-      { "id": "block", "name": "Bloque de piedra / Hormigón", "v": "block", "icon": "poi_unknown.svg" },
-      { "id": "turnstile", "name": "Torno de acceso", "v": "turnstile", "icon": "poi_unknown.svg" }
+      { "id": "protected_area", "name": "Parque natural / Área protegida", "k": "boundary|leisure", "v": "protected_area|nature_reserve|natural_park", "icon": "poi_attraction.svg", "emoji": "🌲" },
+      { "id": "rock", "name": "Roca", "k": "natural", "v": "rock", "icon": "poi_peak.svg", "emoji": "🪨" },
+      { "id": "stone", "name": "Piedra destacada", "k": "natural", "v": "stone", "icon": "poi_peak.svg", "emoji": "🪨" },
+      { "id": "peak", "name": "Cima / Pico", "k": "natural", "v": "peak", "icon": "poi_peak.svg", "emoji": "⛰️" },
+      { "id": "mountain_pass", "name": "Puerto de montaña", "k": "mountain_pass", "v": "yes", "icon": "poi_mountain_pass.svg", "emoji": "🛣️" },
+      { "id": "spring", "name": "Manantial", "k": "natural", "v": "spring", "icon": "poi_drinkingtap.svg", "emoji": "💧" },
+      { "id": "botanical_garden", "name": "Jardín botánico", "k": "garden:type", "v": "botanical", "icon": "poi_attraction.svg", "emoji": "🌷" },
+      { "id": "park", "name": "Parque", "k": "leisure", "v": "park", "icon": "poi_attraction.svg", "emoji": "🌳" },
+      { "id": "beach", "name": "Playa", "k": "natural", "v": "beach", "icon": "poi_swimming_outdoor.svg", "emoji": "🏖️" },
+      { "id": "waterfall", "name": "Cascada", "k": "waterway", "v": "waterfall", "icon": "poi_weir.svg", "emoji": "🌊" },
+      { "id": "mine", "name": "Mina / Pozo", "k": "man_made", "v": "adit|mineshaft", "icon": "poi_cave.svg", "emoji": "⛏️" },
+      { "id": "cave", "name": "Cueva", "k": "natural", "v": "cave_entrance", "icon": "poi_cave.svg", "emoji": "🕳️" },
+      { "id": "sinkhole", "name": "Sima / Dolina", "k": "natural", "v": "sinkhole", "icon": "poi_cave.svg", "emoji": "🕳️" },
+      { "id": "cliff", "name": "Acantilado", "k": "natural", "v": "cliff", "icon": "poi_peak.svg", "emoji": "🧗" },
+      { "id": "tree", "name": "Árbol notable", "k": "natural", "v": "tree", "icon": "poi_unknown.svg", "emoji": "🌳" },
+      { "id": "volcano", "name": "Volcán", "k": "natural", "v": "volcano", "icon": "poi_volcano.svg", "emoji": "🌋" },
+      { "id": "geyser", "name": "Géiser", "k": "natural", "v": "geyser", "icon": "poi_fountain.svg", "emoji": "♨️" },
+      { "id": "hot_spring", "name": "Termas / Fuente termal", "k": "natural", "v": "hot_spring", "icon": "poi_fountain.svg", "emoji": "♨️" },
+      { "id": "glacier", "name": "Glaciar", "k": "natural", "v": "glacier", "icon": "poi_peak.svg", "emoji": "🧊" }
     ]
   },
   {
     "id": "emergency_health",
     "name": "Emergencia y Salud",
     "nodes": [
-      { "id": "fire_station", "name": "Parque de bomberos", "v": "fire_station", "icon": "poi_firestation.svg" },
-      { "id": "mountain_rescue", "name": "Rescate en montaña", "v": "mountain_rescue", "icon": "poi_police.svg" },
-      { "id": "lifeguard", "name": "Socorrista", "v": "yes|lifeguard", "icon": "poi_swimming_outdoor.svg" },
-      { "id": "emergency_point", "name": "Punto de encuentro de emergencia", "v": "assembly_point|access_point", "icon": "poi_telephone.svg" },
-      { "id": "emergency_helipad", "name": "Helipuerto de emergencia", "v": "landing_site", "icon": "poi_helicopter.svg" },
-      { "id": "emergency_phone", "name": "Teléfono de emergencia", "v": "phone", "icon": "poi_telephone.svg" },
-      { "id": "defibrillator", "name": "Desfibrilador (DEA)", "v": "defibrillator", "icon": "poi_hospital.svg" },
-      { "id": "police", "name": "Policía", "v": "police", "icon": "poi_police.svg" },
-      { "id": "doctor", "name": "Médico", "v": "doctors", "icon": "poi_doctors.svg" },
-      { "id": "dentist", "name": "Dentista", "v": "dentist", "icon": "poi_doctors.svg" },
-      { "id": "hospital", "name": "Hospital", "v": "hospital", "icon": "poi_hospital.svg" },
-      { "id": "clinic", "name": "Clínica", "v": "clinic", "icon": "poi_hospital.svg" },
-      { "id": "veterinary", "name": "Veterinario", "v": "veterinary", "icon": "poi_doctors.svg" }
+      { "id": "fire_station", "name": "Parque de bomberos", "k": "amenity", "v": "fire_station", "icon": "poi_firestation.svg", "emoji": "🚒" },
+      { "id": "mountain_rescue", "name": "Rescate en montaña", "k": "emergency", "v": "mountain_rescue", "icon": "poi_police.svg", "emoji": "🚁" },
+      { "id": "lifeguard", "name": "Socorrista", "k": "lifeguard|emergency", "v": "yes|lifeguard", "icon": "poi_swimming_outdoor.svg", "emoji": "🏊" },
+      { "id": "emergency_point", "name": "Punto de encuentro de emergencia", "k": "emergency", "v": "assembly_point|access_point", "icon": "poi_telephone.svg", "emoji": "🆘" },
+      { "id": "emergency_helipad", "name": "Helipuerto de emergencia", "k": "emergency", "v": "landing_site", "icon": "poi_helicopter.svg", "emoji": "🚁" },
+      { "id": "emergency_phone", "name": "Teléfono de emergencia", "k": "emergency", "v": "phone", "icon": "poi_telephone.svg", "emoji": "📞" },
+      { "id": "defibrillator", "name": "Desfibrilador (DEA)", "k": "emergency", "v": "defibrillator", "icon": "poi_hospital.svg", "emoji": "⚡" },
+      { "id": "police", "name": "Policía", "k": "amenity", "v": "police", "icon": "poi_police.svg", "emoji": "👮" },
+      { "id": "doctor", "name": "Médico", "k": "amenity", "v": "doctors", "icon": "poi_doctors.svg", "emoji": "🩺" },
+      { "id": "dentist", "name": "Dentista", "k": "amenity", "v": "dentist", "icon": "poi_doctors.svg", "emoji": "🦷" },
+      { "id": "hospital", "name": "Hospital", "k": "amenity", "v": "hospital", "icon": "poi_hospital.svg", "emoji": "🏥" },
+      { "id": "clinic", "name": "Clínica", "k": "amenity", "v": "clinic", "icon": "poi_hospital.svg", "emoji": "🏥" },
+      { "id": "veterinary", "name": "Veterinario", "k": "amenity", "v": "veterinary", "icon": "poi_doctors.svg", "emoji": "🐾" }
     ]
   },
   {
     "id": "place_of_worship",
     "name": "Lugares de Culto",
     "nodes": [
-      { "id": "wayside_shrine", "name": "Hornacina / Capillita", "v": "wayside_shrine", "icon": "poi_christian.svg" },
-      { "id": "wayside_cross", "name": "Cruz de camino", "v": "wayside_cross|cross", "icon": "poi_christian.svg" },
-      { "id": "buddhist", "name": "Templo budista", "v": "buddhist", "icon": "poi_buddhist.svg" },
-      { "id": "christian", "name": "Iglesia / Capilla cristiana", "v": "christian", "icon": "poi_christian.svg" },
-      { "id": "hindu", "name": "Templo hindú", "v": "hindu", "icon": "poi_hindu.svg" },
-      { "id": "jewish", "name": "Sinagoga", "v": "jewish", "icon": "poi_jewish.svg" },
-      { "id": "muslim", "name": "Mezquita", "v": "muslim", "icon": "poi_islamic.svg" },
-      { "id": "shinto", "name": "Santuario sintoísta", "v": "shinto", "icon": "poi_shinto.svg" },
-      { "id": "taoist", "name": "Templo taoísta", "v": "taoist", "icon": "poi_buddhist.svg" }
+      { "id": "wayside_shrine", "name": "Hornacina / Capillita", "k": "historic", "v": "wayside_shrine", "icon": "poi_christian.svg", "emoji": "⛩️" },
+      { "id": "wayside_cross", "name": "Cruz de camino", "k": "historic|man_made", "v": "wayside_cross|cross", "icon": "poi_christian.svg", "emoji": "✝️" },
+      { "id": "buddhist", "name": "Templo budista", "k": "religion", "v": "buddhist", "icon": "poi_buddhist.svg", "emoji": "☸️" },
+      { "id": "christian", "name": "Iglesia / Capilla cristiana", "k": "religion", "v": "christian", "icon": "poi_christian.svg", "emoji": "⛪" },
+      { "id": "hindu", "name": "Templo hindú", "k": "religion", "v": "hindu", "icon": "poi_hindu.svg", "emoji": "🕉️" },
+      { "id": "jewish", "name": "Sinagoga", "k": "religion", "v": "jewish", "icon": "poi_jewish.svg", "emoji": "✡️" },
+      { "id": "muslim", "name": "Mezquita", "k": "religion", "v": "muslim", "icon": "poi_islamic.svg", "emoji": "🕌" },
+      { "id": "shinto", "name": "Santuario sintoísta", "k": "religion", "v": "shinto", "icon": "poi_shinto.svg", "emoji": "⛩️" },
+      { "id": "taoist", "name": "Templo taoísta", "k": "religion", "v": "taoist", "icon": "poi_buddhist.svg", "emoji": "☯️" }
     ]
   },
   {
     "id": "food_drink",
     "name": "Comida y Bebida",
     "nodes": [
-      { "id": "bar_pub", "name": "Bar / Pub", "v": "bar|pub", "icon": "poi_bar.svg" },
-      { "id": "cafe", "name": "Cafetería", "v": "cafe", "icon": "poi_cafe.svg" },
-      { "id": "restaurant", "name": "Restaurante", "v": "restaurant", "icon": "poi_restaurant.svg" },
-      { "id": "brewery", "name": "Cervecería artesanal", "v": "beer|brewery|yes", "icon": "poi_biergarten.svg" },
-      { "id": "fast_food", "name": "Comida rápida", "v": "fast_food", "icon": "poi_fastfood.svg" },
-      { "id": "confectionery", "name": "Pastelería / Confitería", "v": "pastry|confectionery", "icon": "poi_bakery.svg" },
-      { "id": "drinking_water", "name": "Agua potable / Fuente", "v": "drinking_water", "icon": "poi_drinkingtap.svg" },
-      { "id": "veg_food", "name": "Comida vegetariana / Vegana", "v": "yes", "icon": "poi_restaurant.svg" }
+      { "id": "bar_pub", "name": "Bar / Pub", "k": "amenity", "v": "bar|pub", "icon": "poi_bar.svg", "emoji": "🍺" },
+      { "id": "cafe", "name": "Cafetería", "k": "amenity", "v": "cafe", "icon": "poi_cafe.svg", "emoji": "☕" },
+      { "id": "restaurant", "name": "Restaurante", "k": "amenity", "v": "restaurant", "icon": "poi_restaurant.svg", "emoji": "🍽️" },
+      { "id": "brewery", "name": "Cervecería artesanal", "k": "product|craft|microbrewery", "v": "beer|brewery|yes", "icon": "poi_biergarten.svg", "emoji": "🍻" },
+      { "id": "fast_food", "name": "Comida rápida", "k": "amenity", "v": "fast_food", "icon": "poi_fastfood.svg", "emoji": "🍔" },
+      { "id": "confectionery", "name": "Pastelería / Confitería", "k": "shop", "v": "pastry|confectionery", "icon": "poi_bakery.svg", "emoji": "🧁" },
+      { "id": "drinking_water", "name": "Agua potable / Fuente", "k": "amenity", "v": "drinking_water", "icon": "poi_drinkingtap.svg", "emoji": "🚰" },
+      { "id": "veg_food", "name": "Comida vegetariana / Vegana", "k": "diet:vegetarian|diet:vegan", "v": "yes", "icon": "poi_restaurant.svg", "emoji": "🥗" }
     ]
   },
   {
     "id": "shopping",
     "name": "Compras",
     "nodes": [
-      { "id": "kiosk", "name": "Kiosco", "v": "kiosk", "icon": "poi_book.svg" },
-      { "id": "department_store", "name": "Centro comercial", "v": "department_store|mall", "icon": "poi_marketplace.svg" },
-      { "id": "pharmacy", "name": "Farmacia", "v": "pharmacy", "icon": "poi_pharmacy.svg" },
-      { "id": "bakery", "name": "Panadería", "v": "bakery", "icon": "poi_bakery.svg" },
-      { "id": "supermarket_convenience", "name": "Supermercado / Tienda", "v": "convenience|supermarket", "icon": "poi_supermarket.svg" },
-      { "id": "sport_outdoor", "name": "Tienda de deportes / Outdoor", "v": "bicycle|dive|outdoor|sports", "icon": "poi_bicycle.svg" }
+      { "id": "kiosk", "name": "Kiosco", "k": "shop", "v": "kiosk", "icon": "poi_book.svg", "emoji": "📰" },
+      { "id": "department_store", "name": "Centro comercial", "k": "shop", "v": "department_store|mall", "icon": "poi_marketplace.svg", "emoji": "🛍️" },
+      { "id": "pharmacy", "name": "Farmacia", "k": "amenity", "v": "pharmacy", "icon": "poi_pharmacy.svg", "emoji": "💊" },
+      { "id": "bakery", "name": "Panadería", "k": "shop", "v": "bakery", "icon": "poi_bakery.svg", "emoji": "🍞" },
+      { "id": "supermarket_convenience", "name": "Supermercado / Tienda", "k": "shop", "v": "convenience|supermarket", "icon": "poi_supermarket.svg", "emoji": "🛒" },
+      { "id": "sport_outdoor", "name": "Tienda de deportes / Outdoor", "k": "shop", "v": "bicycle|dive|outdoor|sports", "icon": "poi_bicycle.svg", "emoji": "⚽" }
     ]
   },
   {
     "id": "sport_leisure",
     "name": "Deporte y Ocio",
     "nodes": [
-      { "id": "golf", "name": "Campo de golf", "v": "golf_course", "icon": "poi_golf.svg" },
-      { "id": "swimming", "name": "Piscina / Parque acuático", "v": "swimming_pool|water_park|swimming", "icon": "poi_swimming_outdoor.svg" },
-      { "id": "sport_centre", "name": "Polideportivo", "v": "sports_centre", "icon": "poi_stadium.svg" },
-      { "id": "sport_pitch", "name": "Cancha deportiva", "v": "pitch", "icon": "poi_soccer.svg" },
-      { "id": "stadium", "name": "Estadio", "v": "stadium", "icon": "poi_stadium.svg" },
-      { "id": "ski_jumping", "name": "Trampolín de esquí", "v": "ski_jumping|ski_jump", "icon": "poi_chair_lift.svg" },
-      { "id": "marina", "name": "Puerto deportivo / Marina", "v": "marina", "icon": "poi_slipway.svg" },
-      { "id": "playground", "name": "Parque infantil", "v": "playground", "icon": "poi_playground.svg" },
-      { "id": "clubs_dancing", "name": "Discoteca / Club nocturno", "v": "nightclub|music", "icon": "poi_bar.svg" }
+      { "id": "golf", "name": "Campo de golf", "k": "leisure", "v": "golf_course", "icon": "poi_golf.svg", "emoji": "⛳" },
+      { "id": "swimming", "name": "Piscina / Parque acuático", "k": "leisure|amenity|sport", "v": "swimming_pool|water_park|swimming", "icon": "poi_swimming_outdoor.svg", "emoji": "🏊" },
+      { "id": "sport_centre", "name": "Polideportivo", "k": "leisure", "v": "sports_centre", "icon": "poi_stadium.svg", "emoji": "🏟️" },
+      { "id": "sport_pitch", "name": "Cancha deportiva", "k": "leisure", "v": "pitch", "icon": "poi_soccer.svg", "emoji": "⚽" },
+      { "id": "stadium", "name": "Estadio", "k": "leisure", "v": "stadium", "icon": "poi_stadium.svg", "emoji": "🏟️" },
+      { "id": "ski_jumping", "name": "Trampolín de esquí", "k": "sport|piste:type|man_made", "v": "ski_jumping|ski_jump", "icon": "poi_chair_lift.svg", "emoji": "🎿" },
+      { "id": "marina", "name": "Puerto deportivo / Marina", "k": "leisure", "v": "marina", "icon": "poi_slipway.svg", "emoji": "⛵" },
+      { "id": "playground", "name": "Parque infantil", "k": "leisure", "v": "playground", "icon": "poi_playground.svg", "emoji": "🛝" },
+      { "id": "clubs_dancing", "name": "Discoteca / Club nocturno", "k": "leisure|club", "v": "nightclub|music", "icon": "poi_bar.svg", "emoji": "🕺" }
     ]
   },
   {
     "id": "car_services",
     "name": "Servicios para Vehículos",
     "nodes": [
-      { "id": "gas_station", "name": "Gasolinera", "v": "fuel", "icon": "poi_fuel.svg" },
-      { "id": "charging_station_cars", "name": "Cargador de coches eléctricos", "v": "charging_station", "icon": "poi_charging_station.svg" },
-      { "id": "rest_area", "name": "Área de descanso", "v": "rest_area", "icon": "poi_picnic.svg" },
-      { "id": "parking", "name": "Aparcamiento", "v": "parking", "icon": "poi_parking.svg" },
-      { "id": "car_shop_and_repair", "name": "Taller / Recambios de coche", "v": "car|car_repair|car_parts", "icon": "poi_car_repair.svg" }
+      { "id": "gas_station", "name": "Gasolinera", "k": "amenity", "v": "fuel", "icon": "poi_fuel.svg", "emoji": "⛽" },
+      { "id": "charging_station_cars", "name": "Cargador de coches eléctricos", "k": "amenity", "v": "charging_station", "icon": "poi_charging_station.svg", "emoji": "⚡" },
+      { "id": "rest_area", "name": "Área de descanso", "k": "highway", "v": "rest_area", "icon": "poi_picnic.svg", "emoji": "🅿️" },
+      { "id": "parking", "name": "Aparcamiento", "k": "amenity", "v": "parking", "icon": "poi_parking.svg", "emoji": "🅿️" },
+      { "id": "car_shop_and_repair", "name": "Taller / Recambios de coche", "k": "shop", "v": "car|car_repair|car_parts", "icon": "poi_car_repair.svg", "emoji": "🔧" }
     ]
   },
   {
     "id": "transportation",
     "name": "Transporte Público",
     "nodes": [
-      { "id": "bus_and_tram_stop", "name": "Parada de autobús / Tranvía", "v": "bus_stop|tram_stop", "icon": "poi_bus_stop.svg" },
-      { "id": "bus_station", "name": "Estación de autobuses", "v": "bus_station", "icon": "poi_bus_station.svg" },
-      { "id": "railway_station", "name": "Estación de tren", "v": "halt|station", "icon": "poi_train_station.svg" },
-      { "id": "subway", "name": "Estación de metro", "v": "subway", "icon": "poi_train_station.svg" },
-      { "id": "airport", "name": "Aeropuerto", "v": "aerodrome", "icon": "poi_airport.svg" },
-      { "id": "helipad", "name": "Helipuerto", "v": "helipad|heliport", "icon": "poi_helicopter.svg" },
-      { "id": "ferries", "name": "Terminal de ferry", "v": "ferry_terminal", "icon": "poi_slipway.svg" },
-      { "id": "cable_car", "name": "Teleférico / Telecabina", "v": "cable_car|gondola", "icon": "poi_cable_car.svg" },
-      { "id": "funicular", "name": "Funicular", "v": "funicular", "icon": "poi_gondola.svg" }
+      { "id": "bus_and_tram_stop", "name": "Parada de autobús / Tranvía", "k": "highway|railway", "v": "bus_stop|tram_stop", "icon": "poi_bus_stop.svg", "emoji": "🚏" },
+      { "id": "bus_station", "name": "Estación de autobuses", "k": "amenity", "v": "bus_station", "icon": "poi_bus_station.svg", "emoji": "🚌" },
+      { "id": "railway_station", "name": "Estación de tren", "k": "railway", "v": "halt|station", "icon": "poi_train_station.svg", "emoji": "🚉" },
+      { "id": "subway", "name": "Estación de metro", "k": "station", "v": "subway", "icon": "poi_train_station.svg", "emoji": "🚇" },
+      { "id": "airport", "name": "Aeropuerto", "k": "aeroway", "v": "aerodrome", "icon": "poi_airport.svg", "emoji": "✈️" },
+      { "id": "helipad", "name": "Helipuerto", "k": "aeroway", "v": "helipad|heliport", "icon": "poi_helicopter.svg", "emoji": "🚁" },
+      { "id": "ferries", "name": "Terminal de ferry", "k": "amenity", "v": "ferry_terminal", "icon": "poi_slipway.svg", "emoji": "⛴️" },
+      { "id": "cable_car", "name": "Teleférico / Telecabina", "k": "aerialway", "v": "cable_car|gondola", "icon": "poi_cable_car.svg", "emoji": "🚡" },
+      { "id": "funicular", "name": "Funicular", "k": "railway", "v": "funicular", "icon": "poi_gondola.svg", "emoji": "🚞" }
     ]
   }
 ]
-
